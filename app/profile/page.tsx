@@ -42,7 +42,7 @@ export default function ProfilePage() {
                 Информация о пользователе
               </h2>
             </div>
-            <Descriptions bordered column={1} size="large">
+            <Descriptions bordered column={1} size="middle">
               <Descriptions.Item
                 label={
                   <Space>
