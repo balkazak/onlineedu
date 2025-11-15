@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Card, Radio, Button, message, Result, Progress, Layout } from "antd";
+import { Card, Radio, Button, message, Result, Progress, Layout, Tag } from "antd";
 import { CheckCircleOutlined, CloseCircleOutlined, ArrowLeftOutlined, ClockCircleOutlined } from "@ant-design/icons";
 import { useRouter, useParams } from "next/navigation";
 import { useUser } from "@/contexts/UserContext";
@@ -26,10 +26,15 @@ export default function TestPage() {
   const { userData, loading: userLoading } = useUser();
 
   useEffect(() => {
+    if (!userLoading && !userData) {
+      message.error("Вы должны войти, чтобы пройти тест");
+      router.push("/login");
+      return;
+    }
     if (params.id && !userLoading) {
       loadTest();
     }
-  }, [params.id, userLoading]);
+  }, [params.id, userLoading, userData]);
 
   useEffect(() => {
     if (testStarted && timeLeft > 0 && !submitted) {
@@ -66,8 +71,17 @@ export default function TestPage() {
     }
 
     if (userData?.role === "student") {
-      if (testData.allowedUsers && testData.allowedUsers.length > 0 && !testData.allowedUsers.includes(userData.email)) {
-        message.error("Вам тест не доступен, обратитесь в службу поддержки", 5);
+      let hasAccess = false;
+      if (userData.allowedTests && userData.allowedTests.length > 0) {
+        hasAccess = userData.allowedTests.includes(testId);
+      } else if (testData.allowedUsers && testData.allowedUsers.length > 0) {
+        hasAccess = testData.allowedUsers.includes(userData.email);
+      } else {
+        hasAccess = true;
+      }
+      
+      if (!hasAccess) {
+        message.error("Простите, у вас нет доступа на этот тест", 5);
         setLoading(false);
         setTimeout(() => {
           router.push("/tests");
@@ -160,31 +174,37 @@ export default function TestPage() {
         <Button
           icon={<ArrowLeftOutlined />}
           onClick={() => router.push("/tests")}
-          className="mb-6"
+          className="mb-6 border-none shadow-md bg-blue-500 text-white hover:bg-blue-600 hover:text-white px-6 py-2 rounded-lg text-base font-medium flex items-center gap-2"
         >
           Назад к тестам
         </Button>
 
-        <Card className="mb-6 shadow-lg border-0 rounded-xl">
-          <div className="flex items-start justify-between mb-4">
+        <Card className="mb-6 shadow-xl border-0 rounded-2xl">
+          <div className="flex items-start justify-between mb-4 gap-4">
             <div className="flex-1">
-              <h1 className="text-4xl font-bold mb-2">
+              <h1 className="text-4xl font-bold mb-3 text-gray-900">
                 {test.title}
               </h1>
               {test.description && (
-                <p className="text-gray-600 mb-4">{test.description}</p>
+                <p className="text-gray-600 mb-4 text-lg">{test.description}</p>
               )}
-              <div className="flex items-center gap-4 text-sm text-gray-600">
-                <span>Вопросов: <strong>{test.questions.length}</strong></span>
+              <div className="flex items-center gap-4 text-sm">
+                <Tag color="blue" className="text-sm font-semibold px-3 py-1">
+                  {test.questions.length} вопросов
+                </Tag>
+                <div className="flex items-center gap-2 text-gray-600">
+                  <ClockCircleOutlined />
+                  <span className="font-medium">{formatTime(test.timeLimit)} на прохождение</span>
+                </div>
               </div>
             </div>
             {!submitted && testStarted && (
-              <div className="ml-4">
-                <Card className="bg-gradient-to-br from-red-50 to-orange-50 border-red-200">
-                  <div className="flex items-center gap-2">
-                    <ClockCircleOutlined className="text-red-600 text-xl" />
+              <div className="flex-shrink-0">
+                <Card className="bg-gradient-to-br from-red-50 to-orange-50 border-red-300 shadow-md">
+                  <div className="flex items-center gap-3">
+                    <ClockCircleOutlined className="text-red-600 text-2xl" />
                     <div>
-                      <div className="text-xs text-gray-600">Осталось времени</div>
+                      <div className="text-xs text-gray-600 font-medium">Осталось времени</div>
                       <div className={`text-2xl font-bold ${timeLeft < 300 ? "text-red-600" : "text-gray-900"}`}>
                         {formatTime(timeLeft)}
                       </div>
@@ -200,6 +220,8 @@ export default function TestPage() {
                 percent={score} 
                 status={score >= 70 ? "success" : score >= 50 ? "normal" : "exception"}
                 format={(percent) => `${percent}%`}
+                strokeWidth={12}
+                className="text-lg"
               />
             </div>
           )}
@@ -208,34 +230,38 @@ export default function TestPage() {
         {!submitted ? (
           <div className="space-y-6">
             {test.questions.map((question, index) => (
-              <Card key={index} className="shadow-md">
-                <h3 className="text-lg font-semibold mb-4">
+              <Card key={index} className="shadow-md border-0 rounded-xl">
+                <h3 className="text-lg font-semibold mb-4 text-gray-900">
                   {index + 1}. {question.q}
                 </h3>
                 <Radio.Group
                   onChange={(e) => handleAnswerChange(index, e.target.value)}
                   value={answers[index]}
-                  className="w-full"
+                  className="w-full flex flex-col gap-2"
                   disabled={timeLeft <= 0}
+                  optionType="button"
+                  buttonStyle="solid"
                 >
-                  <div className="space-y-2">
-                    {question.options.map((option, optIndex) => (
-                      <Radio key={optIndex} value={option} className="block py-2">
-                        {option}
-                      </Radio>
-                    ))}
-                  </div>
+                  {question.options.map((option, optIndex) => (
+                    <Radio.Button 
+                      key={optIndex} 
+                      value={option} 
+                      className="block w-full text-base border border-gray-300 rounded-lg py-3 hover:bg-blue-50 font-medium transition-all"
+                    >
+                      {option}
+                    </Radio.Button>
+                  ))}
                 </Radio.Group>
               </Card>
             ))}
-            <Card>
+            <Card className="shadow-lg border-0 rounded-xl">
               <Button
                 type="primary"
                 size="large"
                 onClick={handleSubmit}
                 disabled={Object.keys(answers).length !== test.questions.length || timeLeft <= 0}
                 block
-                className="h-12"
+                className="h-14 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 border-none shadow-lg rounded-xl text-lg font-semibold"
               >
                 Завершить тест
               </Button>

@@ -92,12 +92,6 @@ export default function CoursesManagement() {
 
   const columns = [
     {
-      title: "ID",
-      dataIndex: "id",
-      key: "id",
-      width: 100,
-    },
-    {
       title: "Название",
       dataIndex: "title",
       key: "title",

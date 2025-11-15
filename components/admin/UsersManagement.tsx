@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Table, Button, Modal, Form, Input, message, Popconfirm, Space, Select } from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { User } from "@/lib/types";
-import { getAllUsers, getAllCourses, createUser, updateUser, deleteUser } from "@/lib/api";
+import { getAllUsers, getAllCourses, getAllTests, createUser, updateUser, deleteUser } from "@/lib/api";
 import { useUser } from "@/contexts/UserContext";
 
 const { Option } = Select;
@@ -12,6 +12,7 @@ const { Option } = Select;
 export default function UsersManagement() {
   const [users, setUsers] = useState<User[]>([]);
   const [courses, setCourses] = useState<any[]>([]);
+  const [tests, setTests] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
@@ -28,13 +29,15 @@ export default function UsersManagement() {
     setUsers(usersData);
     const coursesData = await getAllCourses();
     setCourses(coursesData);
+    const testsData = await getAllTests();
+    setTests(testsData);
     setLoading(false);
   };
 
   const handleAdd = () => {
     setEditingUser(null);
     form.resetFields();
-    form.setFieldsValue({ role: "student", allowedCourses: [] });
+    form.setFieldsValue({ role: "student", allowedCourses: [], allowedTests: [] });
     setModalVisible(true);
   };
 
@@ -74,7 +77,8 @@ export default function UsersManagement() {
         values.email,
         values.password,
         values.role,
-        values.allowedCourses || []
+        values.allowedCourses || [],
+        values.allowedTests || []
       );
       
       if (success) {
@@ -109,7 +113,15 @@ export default function UsersManagement() {
       dataIndex: "allowedCourses",
       key: "allowedCourses",
       render: (courses: string[]) => (
-        <span>{courses.length} курс(ов)</span>
+        <span className="text-blue-600 font-medium">{courses?.length || 0} курс(ов)</span>
+      ),
+    },
+    {
+      title: "Доступные тесты",
+      dataIndex: "allowedTests",
+      key: "allowedTests",
+      render: (tests: string[]) => (
+        <span className="text-green-600 font-medium">{tests?.length || 0} тест(ов)</span>
       ),
     },
     {
@@ -142,12 +154,17 @@ export default function UsersManagement() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Управление пользователями</h2>
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-1">Управление пользователями</h2>
+          <p className="text-gray-600">Создание и редактирование пользователей системы</p>
+        </div>
         <Button
           type="primary"
           icon={<PlusOutlined />}
           onClick={handleAdd}
+          size="large"
+          className="bg-gradient-to-r from-blue-600 to-indigo-600 border-0 hover:from-blue-700 hover:to-indigo-700 shadow-md"
         >
           Добавить пользователя
         </Button>
@@ -159,14 +176,20 @@ export default function UsersManagement() {
         loading={loading}
         rowKey="email"
         pagination={{ pageSize: 10 }}
+        className="shadow-sm rounded-lg overflow-hidden"
       />
 
       <Modal
-        title={editingUser ? "Редактировать пользователя" : "Добавить пользователя"}
+        title={
+          <div className="text-xl font-bold">
+            {editingUser ? "Редактировать пользователя" : "Добавить пользователя"}
+          </div>
+        }
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         footer={null}
-        width={600}
+        width={700}
+        className="rounded-xl"
       >
         <Form
           form={form}
@@ -217,6 +240,25 @@ export default function UsersManagement() {
               placeholder="Выберите курсы"
               showSearch
               optionFilterProp="children"
+              allowClear
+              tagRender={(props) => {
+                const { label, onClose } = props;
+                const course = courses.find(c => c.id === props.value);
+                return (
+                  <span
+                    className="ant-select-selection-item"
+                    style={{ marginRight: 4 }}
+                  >
+                    <span className="ant-select-selection-item-content">{course?.title || label}</span>
+                    <span
+                      className="ant-select-selection-item-remove"
+                      onClick={onClose}
+                    >
+                      ×
+                    </span>
+                  </span>
+                );
+              }}
             >
               {courses.map((course) => (
                 <Option key={course.id} value={course.id}>
@@ -226,13 +268,55 @@ export default function UsersManagement() {
             </Select>
           </Form.Item>
 
-          <Form.Item>
-            <Space>
-              <Button type="primary" htmlType="submit">
-                {editingUser ? "Сохранить" : "Создать"}
-              </Button>
-              <Button onClick={() => setModalVisible(false)}>
+          <Form.Item
+            name="allowedTests"
+            label="Доступные тесты"
+          >
+            <Select
+              mode="multiple"
+              placeholder="Выберите тесты"
+              showSearch
+              optionFilterProp="children"
+              allowClear
+              tagRender={(props) => {
+                const { label, onClose } = props;
+                const test = tests.find(t => t.id === props.value);
+                return (
+                  <span
+                    className="ant-select-selection-item"
+                    style={{ marginRight: 4 }}
+                  >
+                    <span className="ant-select-selection-item-content">{test?.title || label}</span>
+                    <span
+                      className="ant-select-selection-item-remove"
+                      onClick={onClose}
+                    >
+                      ×
+                    </span>
+                  </span>
+                );
+              }}
+            >
+              {tests.map((test) => (
+                <Option key={test.id} value={test.id}>
+                  {test.title}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item className="mb-0">
+            <Space className="w-full justify-end">
+              <Button onClick={() => setModalVisible(false)} size="large">
                 Отмена
+              </Button>
+              <Button 
+                type="primary" 
+                htmlType="submit" 
+                size="large"
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 border-0 hover:from-blue-700 hover:to-indigo-700 shadow-md"
+              >
+                {editingUser ? "Сохранить" : "Создать"}
               </Button>
             </Space>
           </Form.Item>

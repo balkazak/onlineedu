@@ -2,6 +2,7 @@ export interface User {
   email: string;
   role: "admin" | "student";
   allowedCourses: string[];
+  allowedTests?: string[];
 }
 
 export interface CourseSection {

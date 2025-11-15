@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, Button, message, Empty, Layout, Collapse } from "antd";
-import { PlayCircleOutlined, ArrowLeftOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
+import { Card, Button, message, Empty, Layout } from "antd";
+import { ArrowLeftOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 import { useRouter, useParams } from "next/navigation";
 import { useUser } from "@/contexts/UserContext";
 import { getCourse } from "@/lib/api";
@@ -11,7 +11,6 @@ import Header from "@/components/Header";
 import Loader from "@/components/Loader";
 
 const { Content, Sider } = Layout;
-const { Panel } = Collapse;
 
 export default function CoursePage() {
   const [course, setCourse] = useState<Course | null>(null);
@@ -23,6 +22,11 @@ export default function CoursePage() {
   const { userData, loading: userLoading } = useUser();
 
   useEffect(() => {
+    if (!userLoading && !userData) {
+      message.error("Вы должны войти, чтобы увидеть курс");
+      router.push("/login");
+      return;
+    }
     if (params.id && !userLoading) {
       loadCourse();
     }
@@ -37,16 +41,16 @@ export default function CoursePage() {
       message.error("Курс не найден");
       setLoading(false);
       setTimeout(() => {
-        router.push("/");
+        router.push("/courses");
       }, 2000);
       return;
     }
 
     if (userData?.role === "student" && !userData.allowedCourses.includes(courseId)) {
-      message.error("Вам курс не доступен, обратитесь в службу поддержки", 5);
+      message.error("Простите, у вас нет доступа на этот курс", 5);
       setLoading(false);
       setTimeout(() => {
-        router.push("/");
+        router.push("/courses");
       }, 3000);
       return;
     }
@@ -92,8 +96,8 @@ export default function CoursePage() {
       <Header />
       <Layout>
         <Sider
-          width={300}
-          className="bg-white shadow-lg"
+          width={320}
+          className="bg-white shadow-xl border-r border-gray-200"
           collapsible
           collapsed={collapsed}
           onCollapse={setCollapsed}
@@ -101,52 +105,62 @@ export default function CoursePage() {
           breakpoint="lg"
           collapsedWidth={0}
         >
-          <div className="p-4">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">{course.title}</h3>
-            <Collapse
-              defaultActiveKey={course.sections.length > 0 ? [course.sections[0].id] : []}
-              ghost
-            >
-              {course.sections.map((section) => (
-                <Panel
-                  header={
-                    <div
-                      className={`flex items-center justify-between ${
-                        selectedSection?.id === section.id ? "text-blue-600 font-semibold" : ""
-                      }`}
-                    >
-                      <span>{section.title}</span>
-                      <PlayCircleOutlined />
-                    </div>
-                  }
-                  key={section.id}
-                >
-                  <Button
-                    type={selectedSection?.id === section.id ? "primary" : "default"}
-                    block
-                    onClick={() => setSelectedSection(section)}
-                    className="mb-2"
+          <div className="p-4 h-full flex flex-col">
+            <h3 className="text-xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">{course.title}</h3>
+            <div className="flex-1 overflow-y-auto">
+              <div className="space-y-2">
+                {course.sections.map((section) => (
+                  <div
+                    key={section.id}
+                    className={`rounded-lg border transition-all duration-200 ${
+                      selectedSection?.id === section.id
+                        ? "bg-blue-50 border-blue-300 shadow-md"
+                        : "bg-white border-gray-200 hover:border-blue-300 hover:shadow-sm"
+                    }`}
                   >
-                    Открыть урок
-                  </Button>
-                  {section.description && (
-                    <p className="text-sm text-gray-600 mt-2">{section.description}</p>
-                  )}
-                </Panel>
-              ))}
-            </Collapse>
+                    <div className="p-3">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <h4 className={`text-sm font-semibold flex-1 leading-tight ${
+                          selectedSection?.id === section.id ? "text-blue-700" : "text-gray-900"
+                        }`}>
+                          {section.title}
+                        </h4>
+                        <Button
+                          type={selectedSection?.id === section.id ? "primary" : "default"}
+                          size="small"
+                          className={`text-xs font-medium rounded-md ${
+                            selectedSection?.id === section.id
+                              ? "bg-blue-600 border-blue-600 hover:bg-blue-700"
+                              : "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200"
+                          }`}
+                          style={{ minWidth: 100, height: 28, padding: "0 12px" }}
+                          onClick={() => setSelectedSection(section)}
+                        >
+                          Открыть урок
+                        </Button>
+                      </div>
+                      {section.description && (
+                        <p className="text-xs text-gray-600 mt-2 leading-relaxed">
+                          {section.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </Sider>
         <Content className="p-6">
           <Button
             icon={<ArrowLeftOutlined />}
-            onClick={() => router.push("/")}
-            className="mb-6"
+            onClick={() => router.push("/courses")}
+            className="mb-6 border-none shadow-md bg-blue-500 text-white hover:bg-blue-600 hover:text-white px-6 py-2 rounded-lg text-base font-medium flex items-center gap-2"
           >
             Назад к курсам
           </Button>
 
-          <Card className="mb-6 shadow-lg border-0 rounded-xl">
+          <Card className="mt-6 shadow-xl border-0 rounded-2xl">
             <div className="mb-6">
               <h1 className="text-4xl font-bold mb-4 text-gray-900">{course.title}</h1>
               {course.description && (

@@ -3,7 +3,8 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { onAuthStateChanged, User as FirebaseUser, signOut } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { getUserData, User } from "@/lib/api";
+import { getUserData } from "@/lib/api";
+import { User } from "@/lib/types";
 import Loader from "@/components/Loader";
 
 interface UserContextType {
@@ -31,6 +32,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    if (!auth) return;
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setFirebaseUser(user);
       if (user?.email) {

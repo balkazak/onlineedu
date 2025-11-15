@@ -205,7 +205,8 @@ export const createUser = async (
   email: string, 
   password: string, 
   role: "admin" | "student", 
-  allowedCourses: string[] = []
+  allowedCourses: string[] = [],
+  allowedTests: string[] = []
 ): Promise<boolean> => {
   if (!auth || !db) return false;
   try {
@@ -216,7 +217,8 @@ export const createUser = async (
     await setDoc(doc(db, "users", email), {
       email,
       role,
-      allowedCourses
+      allowedCourses,
+      allowedTests: allowedTests || []
     });
     
     if (auth.currentUser && auth.currentUser.email === email) {

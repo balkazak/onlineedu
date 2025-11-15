@@ -91,17 +91,24 @@ export default function AdminPage() {
   return (
     <Layout className="min-h-screen bg-gray-50">
       <Header />
-      <Content className="max-w-7xl mx-auto px-4 py-8">
-        <Card className="shadow-lg border-0 rounded-xl">
-          <div className="mb-6">
-            <h1 className="text-4xl font-bold mb-2 text-gray-900 flex items-center gap-3">
-              <div className="w-1 h-10 bg-gradient-to-b from-blue-600 to-indigo-600 rounded-full" />
+      <Content>
+        <div className="relative bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 text-white py-16 overflow-hidden">
+          <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px]" />
+          <div className="relative max-w-7xl mx-auto px-4 text-center">
+            <h1 className="text-5xl md:text-6xl font-bold mb-4 leading-tight">
               Панель администратора
             </h1>
-            <p className="text-gray-600">Управление курсами, тестами и пользователями</p>
+            <p className="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto">
+              Управление курсами, тестами и пользователями
+            </p>
           </div>
-          <Tabs defaultActiveKey="courses" items={tabItems} size="large" />
-        </Card>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 py-12">
+          <Card className="shadow-xl border-0 rounded-2xl">
+            <Tabs defaultActiveKey="courses" items={tabItems} size="large" />
+          </Card>
+        </div>
       </Content>
     </Layout>
   );
