@@ -10,7 +10,8 @@ import {
   where,
   setDoc
 } from "firebase/firestore";
-import { db } from "./firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db, storage } from "./firebase";
 import { User, Course, Test } from "./types";
 import { createUserWithEmailAndPassword, signOut, signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "./firebase";
@@ -39,7 +40,7 @@ export const getAllCourses = async (): Promise<Course[]> => {
         id: doc.id,
         title: data.title || "",
         description: data.description || "",
-        sections: data.sections || [],
+        lessons: data.lessons || [],
         createdAt: data.createdAt
       } as Course;
     });
@@ -59,7 +60,7 @@ export const getCourse = async (courseId: string): Promise<Course | null> => {
         id: courseDoc.id, 
         title: data.title || "",
         description: data.description || "",
-        sections: data.sections || [],
+        lessons: data.lessons || [],
         createdAt: data.createdAt
       } as Course;
     }
@@ -254,6 +255,31 @@ export const deleteUser = async (email: string): Promise<boolean> => {
   } catch (error) {
     console.error("Error deleting user:", error);
     return false;
+  }
+};
+
+export const uploadImage = async (file: File, path: string): Promise<string | null> => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("path", path);
+
+    const response = await fetch("/api/upload-image", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error("Error uploading image:", error);
+      return null;
+    }
+
+    const data = await response.json();
+    return data.url || null;
+  } catch (error) {
+    console.error("Error uploading image:", error);
+    return null;
   }
 };
 

@@ -48,9 +48,9 @@ export default function CoursesPage() {
   };
 
   const getYouTubeThumbnail = (course: Course) => {
-    if (course.sections && course.sections.length > 0) {
-      const firstSection = course.sections[0];
-      const videoId = getYouTubeVideoId(firstSection.youtubeLink);
+    if (course.lessons && course.lessons.length > 0) {
+      const firstLesson = course.lessons[0];
+      const videoId = getYouTubeVideoId(firstLesson.youtubeLink);
       return videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : null;
     }
     return null;
@@ -168,9 +168,9 @@ export default function CoursesPage() {
                             <p className="text-gray-600 text-sm mb-2 line-clamp-2 min-h-[36px]">
                               {course.description || "Изучите новый материал и пройдите тесты"}
                             </p>
-                            {course.sections && course.sections.length > 0 && (
+                            {course.lessons && course.lessons.length > 0 && (
                               <Tag color="blue" className="text-xs">
-                                {course.sections.length} секций
+                                {course.lessons.length} уроков
                               </Tag>
                             )}
                           </div>

@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, Button, message, Empty, Layout } from "antd";
+import { Card, Button, message, Empty, Layout, Radio, Space } from "antd";
 import { ArrowLeftOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 import { useRouter, useParams } from "next/navigation";
 import { useUser } from "@/contexts/UserContext";
 import { getCourse } from "@/lib/api";
-import { Course, CourseSection } from "@/lib/types";
+import { Course, Lesson } from "@/lib/types";
 import Header from "@/components/Header";
 import Loader from "@/components/Loader";
 
@@ -15,8 +15,13 @@ const { Content, Sider } = Layout;
 export default function CoursePage() {
   const [course, setCourse] = useState<Course | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedSection, setSelectedSection] = useState<CourseSection | null>(null);
+  const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [collapsed, setCollapsed] = useState(false);
+  const [showTest, setShowTest] = useState(false);
+  const [showSolution, setShowSolution] = useState(false);
+  const [testAnswers, setTestAnswers] = useState<Record<number, string>>({});
+  const [testResults, setTestResults] = useState<Record<number, boolean> | null>(null);
+  const [testSubmitted, setTestSubmitted] = useState(false);
   const router = useRouter();
   const params = useParams();
   const { userData, loading: userLoading } = useUser();
@@ -56,9 +61,14 @@ export default function CoursePage() {
     }
 
     setCourse(courseData);
-    if (courseData.sections && courseData.sections.length > 0) {
-      setSelectedSection(courseData.sections[0]);
+    if (courseData.lessons && courseData.lessons.length > 0) {
+      setSelectedLesson(courseData.lessons[0]);
     }
+    setShowTest(false);
+    setShowSolution(false);
+    setTestAnswers({});
+    setTestResults(null);
+    setTestSubmitted(false);
     setLoading(false);
   };
 
@@ -89,7 +99,8 @@ export default function CoursePage() {
     );
   }
 
-  const embedUrl = selectedSection ? getYouTubeEmbedUrl(selectedSection.youtubeLink) : null;
+  const embedUrl = selectedLesson ? getYouTubeEmbedUrl(selectedLesson.youtubeLink) : null;
+  const solutionEmbedUrl = selectedLesson?.solutionVideoLink ? getYouTubeEmbedUrl(selectedLesson.solutionVideoLink) : null;
 
   return (
     <Layout className="min-h-screen bg-gray-50">
@@ -109,11 +120,11 @@ export default function CoursePage() {
             <h3 className="text-xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">{course.title}</h3>
             <div className="flex-1 overflow-y-auto">
               <div className="space-y-2">
-                {course.sections.map((section) => (
+                {course.lessons.map((lesson) => (
                   <div
-                    key={section.id}
+                    key={lesson.id}
                     className={`rounded-lg border transition-all duration-200 ${
-                      selectedSection?.id === section.id
+                      selectedLesson?.id === lesson.id
                         ? "bg-blue-50 border-blue-300 shadow-md"
                         : "bg-white border-gray-200 hover:border-blue-300 hover:shadow-sm"
                     }`}
@@ -121,27 +132,34 @@ export default function CoursePage() {
                     <div className="p-3">
                       <div className="flex items-start justify-between gap-3 mb-2">
                         <h4 className={`text-sm font-semibold flex-1 leading-tight ${
-                          selectedSection?.id === section.id ? "text-blue-700" : "text-gray-900"
+                          selectedLesson?.id === lesson.id ? "text-blue-700" : "text-gray-900"
                         }`}>
-                          {section.title}
+                          {lesson.title}
                         </h4>
                         <Button
-                          type={selectedSection?.id === section.id ? "primary" : "default"}
+                          type={selectedLesson?.id === lesson.id ? "primary" : "default"}
                           size="small"
                           className={`text-xs font-medium rounded-md ${
-                            selectedSection?.id === section.id
+                            selectedLesson?.id === lesson.id
                               ? "bg-blue-600 border-blue-600 hover:bg-blue-700"
                               : "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200"
                           }`}
                           style={{ minWidth: 100, height: 28, padding: "0 12px" }}
-                          onClick={() => setSelectedSection(section)}
+                          onClick={() => {
+                          setSelectedLesson(lesson);
+                          setShowTest(false);
+                          setShowSolution(false);
+                          setTestAnswers({});
+                          setTestResults(null);
+                          setTestSubmitted(false);
+                        }}
                         >
                           Открыть урок
                         </Button>
                       </div>
-                      {section.description && (
+                      {lesson.description && (
                         <p className="text-xs text-gray-600 mt-2 leading-relaxed">
-                          {section.description}
+                          {lesson.description}
                         </p>
                       )}
                     </div>
@@ -166,36 +184,296 @@ export default function CoursePage() {
               {course.description && (
                 <p className="text-lg text-gray-600 leading-relaxed">{course.description}</p>
               )}
-              {selectedSection && (
+              {selectedLesson && (
                 <div className="mt-4">
                   <h2 className="text-2xl font-semibold text-gray-800 mb-2">
-                    {selectedSection.title}
+                    {selectedLesson.title}
                   </h2>
-                  {selectedSection.description && (
-                    <p className="text-gray-600">{selectedSection.description}</p>
+                  {selectedLesson.description && (
+                    <p className="text-gray-600">{selectedLesson.description}</p>
                   )}
                 </div>
               )}
             </div>
             
             {embedUrl ? (
-              <div className="relative pb-[56.25%] h-0 overflow-hidden rounded-xl shadow-2xl">
-                <iframe
-                  className="absolute top-0 left-0 w-full h-full"
-                  src={embedUrl}
-                  title={selectedSection?.title || course.title}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                />
+              <div className="mb-6">
+                <h3 className="text-xl font-semibold text-gray-800 mb-3">Видео урока</h3>
+                <div className="relative pb-[56.25%] h-0 overflow-hidden rounded-xl shadow-2xl">
+                  <iframe
+                    className="absolute top-0 left-0 w-full h-full"
+                    src={embedUrl}
+                    title={selectedLesson?.title || course.title}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
               </div>
-            ) : selectedSection ? (
-              <div className="bg-gradient-to-br from-gray-100 to-gray-200 h-96 flex items-center justify-center rounded-xl">
-                <p className="text-gray-500 text-lg">Неверная ссылка на видео</p>
+            ) : selectedLesson ? (
+              <div className="mb-6">
+                <h3 className="text-xl font-semibold text-gray-800 mb-3">Видео урока</h3>
+                <div className="bg-gradient-to-br from-gray-100 to-gray-200 h-96 flex items-center justify-center rounded-xl">
+                  <p className="text-gray-500 text-lg">Неверная ссылка на видео</p>
+                </div>
               </div>
             ) : (
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 h-96 flex items-center justify-center rounded-xl">
-                <p className="text-gray-500 text-lg">Выберите раздел курса из меню слева</p>
+                <p className="text-gray-500 text-lg">Выберите урок из меню слева</p>
               </div>
+            )}
+
+            {selectedLesson && (
+              <>
+                {selectedLesson.test && selectedLesson.test.questions && selectedLesson.test.questions.length > 0 && (
+                  <div className="mb-6">
+                    {!showTest ? (
+                      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-md text-center">
+                        <h3 className="text-xl font-semibold text-gray-800 mb-3">Тест к уроку</h3>
+                        <p className="text-gray-600 mb-4">
+                          Пройдите тест для закрепления материала. В тесте {selectedLesson.test.questions.length} {selectedLesson.test.questions.length === 1 ? 'вопрос' : selectedLesson.test.questions.length < 5 ? 'вопроса' : 'вопросов'}.
+                        </p>
+                        <Button
+                          type="primary"
+                          size="large"
+                          onClick={() => {
+                            setShowTest(true);
+                            setTestAnswers({});
+                            setTestResults(null);
+                            setTestSubmitted(false);
+                          }}
+                          className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 border-0"
+                        >
+                          Открыть тест
+                        </Button>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="flex justify-between items-center mb-4">
+                          <h3 className="text-xl font-semibold text-gray-800">Тест</h3>
+                          <Button
+                            onClick={() => {
+                              setShowTest(false);
+                              setTestAnswers({});
+                              setTestResults(null);
+                              setTestSubmitted(false);
+                            }}
+                            type="default"
+                          >
+                            Скрыть тест
+                          </Button>
+                        </div>
+                        <div className="space-y-6">
+                          {selectedLesson.test.questions.map((question, qIndex) => {
+                            const isCorrect = testResults ? testResults[qIndex] : null;
+                            const userAnswer = testAnswers[qIndex];
+                            const correctAnswer = question.answer;
+                            
+                            return (
+                              <Card 
+                                key={qIndex} 
+                                className={`shadow-md ${
+                                  testSubmitted 
+                                    ? isCorrect 
+                                      ? 'border-green-500 bg-green-50' 
+                                      : 'border-red-500 bg-red-50'
+                                    : ''
+                                }`}
+                              >
+                                <div className="mb-4">
+                                  <div className="flex items-start gap-3 mb-3">
+                                    <span className="font-bold text-lg text-blue-600">{qIndex + 1}.</span>
+                                    <div className="flex-1">
+                                      <div className="flex items-center gap-2 mb-2">
+                                        <p className="text-base font-medium text-gray-800">{question.q}</p>
+                                        {testSubmitted && (
+                                          <span className={`text-sm font-semibold px-2 py-1 rounded ${
+                                            isCorrect 
+                                              ? 'bg-green-500 text-white' 
+                                              : 'bg-red-500 text-white'
+                                          }`}>
+                                            {isCorrect ? '✓ Правильно' : '✗ Неправильно'}
+                                          </span>
+                                        )}
+                                      </div>
+                                      {question.qImage && (
+                                        <div className="mb-3">
+                                          <img 
+                                            src={question.qImage} 
+                                            alt="Question" 
+                                            className="max-w-full h-auto rounded-lg border border-gray-200"
+                                          />
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <Radio.Group 
+                                    className="w-full"
+                                    value={userAnswer}
+                                    onChange={(e) => {
+                                      if (!testSubmitted) {
+                                        setTestAnswers({ ...testAnswers, [qIndex]: e.target.value });
+                                      }
+                                    }}
+                                    disabled={testSubmitted}
+                                  >
+                                    <Space direction="vertical" className="w-full" size="middle">
+                                      {question.options.map((option, optIndex) => {
+                                        const isSelected = userAnswer === option.label;
+                                        const isCorrectOption = option.label === correctAnswer;
+                                        let optionClass = '';
+                                        
+                                        if (testSubmitted) {
+                                          if (isCorrectOption) {
+                                            optionClass = 'bg-green-100 border-green-500';
+                                          } else if (isSelected && !isCorrectOption) {
+                                            optionClass = 'bg-red-100 border-red-500';
+                                          }
+                                        }
+                                        
+                                        return (
+                                          <Radio 
+                                            key={optIndex} 
+                                            value={option.label} 
+                                            className={`w-full ${optionClass}`}
+                                          >
+                                            <div className="flex items-start gap-3">
+                                              <span className="font-semibold text-gray-700 min-w-[24px]">
+                                                {option.label.toUpperCase()}.
+                                              </span>
+                                              <div className="flex-1">
+                                                <span className="text-gray-700">{option.text}</span>
+                                                {option.image && (
+                                                  <div className="mt-2">
+                                                    <img 
+                                                      src={option.image} 
+                                                      alt={`Option ${option.label}`} 
+                                                      className="max-w-md h-auto rounded border border-gray-200"
+                                                    />
+                                                  </div>
+                                                )}
+                                              </div>
+                                            </div>
+                                          </Radio>
+                                        );
+                                      })}
+                                    </Space>
+                                  </Radio.Group>
+                                  {testSubmitted && !isCorrect && (
+                                    <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
+                                      <p className="text-sm text-gray-700">
+                                        <span className="font-semibold">Правильный ответ:</span> {correctAnswer.toUpperCase()}
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              </Card>
+                            );
+                          })}
+                        </div>
+                        {!testSubmitted ? (
+                          <div className="mt-6 text-center">
+                            <Button
+                              type="primary"
+                              size="large"
+                              onClick={() => {
+                                const results: Record<number, boolean> = {};
+                                selectedLesson.test.questions.forEach((question, index) => {
+                                  results[index] = testAnswers[index] === question.answer;
+                                });
+                                setTestResults(results);
+                                setTestSubmitted(true);
+                                
+                                const correctCount = Object.values(results).filter(r => r).length;
+                                const totalCount = selectedLesson.test.questions.length;
+                                const percentage = Math.round((correctCount / totalCount) * 100);
+                                
+                                if (percentage === 100) {
+                                  message.success(`Отлично! Вы ответили правильно на все вопросы! (${correctCount}/${totalCount})`);
+                                } else if (percentage >= 70) {
+                                  message.success(`Хорошо! Вы ответили правильно на ${correctCount} из ${totalCount} вопросов (${percentage}%)`);
+                                } else {
+                                  message.warning(`Вы ответили правильно на ${correctCount} из ${totalCount} вопросов (${percentage}%). Попробуйте еще раз!`);
+                                }
+                              }}
+                              disabled={Object.keys(testAnswers).length !== selectedLesson.test.questions.length}
+                              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 border-0"
+                            >
+                              Отправить ответы
+                            </Button>
+                            {Object.keys(testAnswers).length !== selectedLesson.test.questions.length && (
+                              <p className="mt-2 text-sm text-gray-500">
+                                Ответьте на все вопросы для отправки
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="mt-6 p-6 bg-blue-50 border border-blue-200 rounded-xl text-center">
+                            <h4 className="text-lg font-semibold text-gray-800 mb-2">Результаты теста</h4>
+                            <p className="text-2xl font-bold text-blue-600 mb-2">
+                              {Object.values(testResults || {}).filter(r => r).length} / {selectedLesson.test.questions.length}
+                            </p>
+                            <p className="text-gray-600 mb-4">
+                              Правильных ответов: {Math.round((Object.values(testResults || {}).filter(r => r).length / selectedLesson.test.questions.length) * 100)}%
+                            </p>
+                            <Button
+                              onClick={() => {
+                                setTestAnswers({});
+                                setTestResults(null);
+                                setTestSubmitted(false);
+                              }}
+                              type="default"
+                            >
+                              Пройти тест заново
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {solutionEmbedUrl && (
+                  <div className="mb-6">
+                    {!showSolution ? (
+                      <div className="bg-white border border-gray-200 rounded-xl p-6 shadow-md text-center">
+                        <h3 className="text-xl font-semibold text-gray-800 mb-3">Видео с решением</h3>
+                        <p className="text-gray-600 mb-4">
+                          Посмотрите видео с разбором решений теста.
+                        </p>
+                        <Button
+                          type="primary"
+                          size="large"
+                          onClick={() => setShowSolution(true)}
+                          className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 border-0"
+                        >
+                          Открыть видео с решением
+                        </Button>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="flex justify-between items-center mb-3">
+                          <h3 className="text-xl font-semibold text-gray-800">Видео с решением</h3>
+                          <Button
+                            onClick={() => setShowSolution(false)}
+                            type="default"
+                          >
+                            Скрыть видео
+                          </Button>
+                        </div>
+                        <div className="relative pb-[56.25%] h-0 overflow-hidden rounded-xl shadow-2xl">
+                          <iframe
+                            className="absolute top-0 left-0 w-full h-full"
+                            src={solutionEmbedUrl}
+                            title={`Решение: ${selectedLesson.title}`}
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
             )}
           </Card>
         </Content>

@@ -5,24 +5,33 @@ export interface User {
   allowedTests?: string[];
 }
 
-export interface CourseSection {
+export interface Lesson {
   id: string;
   title: string;
   youtubeLink: string;
   description?: string;
+  test?: {
+    questions: TestQuestion[];
+  };
+  solutionVideoLink?: string;
 }
 
 export interface Course {
   id: string;
   title: string;
   description?: string;
-  sections: CourseSection[];
+  lessons: Lesson[];
   createdAt?: any;
 }
 
 export interface TestQuestion {
   q: string;
-  options: string[];
+  qImage?: string;
+  options: {
+    label: string;
+    text: string;
+    image?: string;
+  }[];
   answer: string;
 }
 
