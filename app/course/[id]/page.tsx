@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { Card, Button, message, Empty, Layout, Radio, Space } from "antd";
 import { ArrowLeftOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 import { useRouter, useParams } from "next/navigation";
@@ -27,15 +27,20 @@ export default function CoursePage() {
   const { userData, loading: userLoading } = useUser();
 
   useEffect(() => {
-    if (!userLoading && !userData) {
-      message.error("Вы должны войти, чтобы увидеть курс");
-      router.push("/login");
-      return;
-    }
-    if (params.id && !userLoading) {
+    if (params.id) {
       loadCourse();
     }
-  }, [params.id, userData, userLoading]);
+  }, [params.id]);
+
+  useEffect(() => {
+    if (!userLoading && !userData && params.id) {
+      const timer = setTimeout(() => {
+        message.error("Вы должны войти, чтобы увидеть курс");
+        router.push("/login");
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [userLoading, userData, params.id, router]);
 
   const loadCourse = async () => {
     setLoading(true);
@@ -72,14 +77,23 @@ export default function CoursePage() {
     setLoading(false);
   };
 
-  const getYouTubeEmbedUrl = (url: string) => {
+  const getYouTubeEmbedUrl = useCallback((url: string) => {
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
     const match = url.match(regExp);
     const videoId = match && match[2].length === 11 ? match[2] : null;
     return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
-  };
+  }, []);
 
-  if (userLoading || loading) {
+  const embedUrl = useMemo(() => 
+    selectedLesson ? getYouTubeEmbedUrl(selectedLesson.youtubeLink) : null,
+    [selectedLesson, getYouTubeEmbedUrl]
+  );
+  const solutionEmbedUrl = useMemo(() => 
+    selectedLesson?.solutionVideoLink ? getYouTubeEmbedUrl(selectedLesson.solutionVideoLink) : null,
+    [selectedLesson, getYouTubeEmbedUrl]
+  );
+
+  if (loading) {
     return (
       <Layout className="min-h-screen bg-gray-50">
         <Header />
@@ -98,9 +112,6 @@ export default function CoursePage() {
       </Layout>
     );
   }
-
-  const embedUrl = selectedLesson ? getYouTubeEmbedUrl(selectedLesson.youtubeLink) : null;
-  const solutionEmbedUrl = selectedLesson?.solutionVideoLink ? getYouTubeEmbedUrl(selectedLesson.solutionVideoLink) : null;
 
   return (
     <Layout className="min-h-screen bg-gray-50">
@@ -300,6 +311,7 @@ export default function CoursePage() {
                                           <img 
                                             src={question.qImage} 
                                             alt="Question" 
+                                            loading="lazy"
                                             className="max-w-full h-auto rounded-lg border border-gray-200"
                                           />
                                         </div>
@@ -347,6 +359,7 @@ export default function CoursePage() {
                                                     <img 
                                                       src={option.image} 
                                                       alt={`Option ${option.label}`} 
+                                                      loading="lazy"
                                                       className="max-w-md h-auto rounded border border-gray-200"
                                                     />
                                                   </div>

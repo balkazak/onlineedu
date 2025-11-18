@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Button, Avatar, Dropdown, Space, Badge } from "antd";
-import { 
-  HomeOutlined, 
-  BookOutlined, 
-  UserOutlined, 
+import {
+  HomeOutlined,
+  BookOutlined,
+  UserOutlined,
   LogoutOutlined,
   SettingOutlined,
   MenuOutlined,
@@ -25,42 +25,44 @@ export default function Header() {
   const { language, setLanguage, t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const userMenuItems = [
+  const handleLogout = useCallback(async () => {
+    await logout();
+    router.push("/");
+    setMobileMenuOpen(false);
+  }, [logout, router]);
+
+  const userMenuItems = useMemo(() => [
     {
       key: "profile",
-      icon: <UserOutlined />,
+      icon: <UserOutlined />, 
       label: t("profile"),
       onClick: () => {
         router.push("/profile");
         setMobileMenuOpen(false);
       },
     },
-    {
-      type: "divider" as const,
-    },
+    { type: "divider" as const },
     {
       key: "logout",
-      icon: <LogoutOutlined />,
+      icon: <LogoutOutlined />, 
       label: t("logout"),
-      onClick: async () => {
-        await logout();
-        router.push("/");
-        setMobileMenuOpen(false);
-      },
+      onClick: handleLogout,
     },
-  ];
+  ], [t, router, handleLogout]);
 
-  const navLinks = [
-    { href: "/", label: t("home"), icon: <HomeOutlined /> },
-    { href: "/courses", label: t("courses"), icon: <BookOutlined /> },
-    { href: "/tests", label: t("tests"), icon: <FileTextOutlined /> },
-  ];
+  const navLinks = useMemo(() => {
+    const links = [
+      { href: "/", label: t("home"), icon: <HomeOutlined /> },
+      { href: "/courses", label: t("courses"), icon: <BookOutlined /> },
+      { href: "/tests", label: t("tests"), icon: <FileTextOutlined /> },
+    ];
+    if (userData?.role === "admin") {
+      links.push({ href: "/admin", label: t("admin"), icon: <SettingOutlined /> });
+    }
+    return links;
+  }, [userData?.role, t]);
 
-  if (userData?.role === "admin") {
-    navLinks.push({ href: "/admin", label: t("admin"), icon: <SettingOutlined /> });
-  }
-
-  const languageMenuItems = [
+  const languageMenuItems = useMemo(() => [
     {
       key: "ru",
       label: "Русский",
@@ -71,7 +73,7 @@ export default function Header() {
       label: "Қазақша",
       onClick: () => setLanguage("kz"),
     },
-  ];
+  ], [setLanguage]);
 
   return (
     <header className="bg-white shadow-md sticky top-0 z-50 border-b border-gray-200">
@@ -82,8 +84,9 @@ export default function Header() {
               <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center transform group-hover:scale-105 transition-transform shadow-lg">
                 <BookOutlined className="text-white text-lg" />
               </div>
+              {/* Лого и фирменное название */}
               <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                Онлайн Образование
+                BIL <span className="text-blue-400">NIS</span>
               </span>
             </Link>
 
@@ -210,11 +213,7 @@ export default function Header() {
                 <Button 
                   block
                   icon={<LogoutOutlined />}
-                  onClick={async () => {
-                    await logout();
-                    router.push("/");
-                    setMobileMenuOpen(false);
-                  }}
+                  onClick={handleLogout}
                 >
                   {t("logout")}
                 </Button>

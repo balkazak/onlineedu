@@ -4,6 +4,9 @@ import "antd/dist/reset.css";
 import "./globals.css";
 import { UserProvider } from "@/contexts/UserContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import Footer from "@/components/Footer";
+import FloatingWhatsapp from "@/components/FloatingWhatsapp";
+import ScrollToTop from "@/components/ScrollToTop";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -32,7 +35,12 @@ export default function RootLayout({
       >
         <LanguageProvider>
           <UserProvider>
-            {children}
+            <div className="flex flex-col min-h-screen">
+              <div className="flex-grow">{children}</div>
+              <Footer />
+            </div>
+            <FloatingWhatsapp />
+            <ScrollToTop />
           </UserProvider>
         </LanguageProvider>
       </body>

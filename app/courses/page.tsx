@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { Card, Row, Col, Button, Spin, Empty, Tag, message } from "antd";
 import { PlayCircleOutlined, LockOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
@@ -17,13 +17,11 @@ export default function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const { userData, loading: userLoading } = useUser();
+  const { userData } = useUser();
 
   useEffect(() => {
-    if (!userLoading) {
-      loadCourses();
-    }
-  }, [userLoading]);
+    loadCourses();
+  }, []);
 
   const loadCourses = async () => {
     setLoading(true);
@@ -32,31 +30,31 @@ export default function CoursesPage() {
     setLoading(false);
   };
 
-  const isCourseAccessible = (courseId: string) => {
+  const isCourseAccessible = useCallback((courseId: string) => {
     if (!userData) return false;
     if (userData.role === "admin") return true;
     if (userData.role === "student") {
       return userData.allowedCourses.includes(courseId);
     }
     return false;
-  };
+  }, [userData]);
 
-  const getYouTubeVideoId = (url: string) => {
+  const getYouTubeVideoId = useCallback((url: string) => {
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
     const match = url.match(regExp);
     return match && match[2].length === 11 ? match[2] : null;
-  };
+  }, []);
 
-  const getYouTubeThumbnail = (course: Course) => {
+  const getYouTubeThumbnail = useCallback((course: Course) => {
     if (course.lessons && course.lessons.length > 0) {
       const firstLesson = course.lessons[0];
       const videoId = getYouTubeVideoId(firstLesson.youtubeLink);
       return videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : null;
     }
     return null;
-  };
+  }, [getYouTubeVideoId]);
 
-  if (userLoading || loading) {
+  if (loading) {
     return (
       <Layout className="min-h-screen bg-gray-50">
         <Header />
@@ -91,6 +89,7 @@ export default function CoursesPage() {
             <Row gutter={[24, 24]}>
               {courses.map((course) => {
                 const thumbnail = getYouTubeThumbnail(course);
+                const accessible = isCourseAccessible(course.id);
                 return (
                   <Col xs={24} sm={12} lg={8} key={course.id}>
                     <Card
@@ -102,6 +101,7 @@ export default function CoursesPage() {
                             <img
                               alt={course.title}
                               src={thumbnail}
+                              loading="lazy"
                               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
@@ -124,15 +124,16 @@ export default function CoursesPage() {
                       bodyStyle={{ padding: "18px 16px 8px 16px", minHeight: 120 }}
                       actions={[
                         <Button
+                          key="action"
                           type="primary"
-                          icon={isCourseAccessible(course.id) ? <PlayCircleOutlined /> : <LockOutlined />}
+                          icon={accessible ? <PlayCircleOutlined /> : <LockOutlined />}
                           onClick={() => {
                             if (!userData) {
                               message.error("Вы должны войти, чтобы увидеть курс");
                               router.push("/login");
                               return;
                             }
-                            if (isCourseAccessible(course.id)) {
+                            if (accessible) {
                               router.push(`/course/${course.id}`);
                             } else {
                               message.error("Простите, у вас нет доступа на этот курс");
@@ -140,12 +141,12 @@ export default function CoursesPage() {
                           }}
                           style={{ padding: "0 18px", height: 36, fontSize: 15, borderRadius: 8, minWidth: 128 }}
                           className={`font-semibold border-0 m-0 ${
-                            isCourseAccessible(course.id)
+                            accessible
                               ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
                               : "bg-gray-400 hover:bg-gray-500"
                           }`}
                         >
-                          {isCourseAccessible(course.id) ? "Открыть курс" : "Недоступен"}
+                          {accessible ? "Открыть курс" : "Недоступен"}
                         </Button>,
                       ]}
                     >
@@ -154,7 +155,7 @@ export default function CoursesPage() {
                           <div className="flex items-start justify-between mb-2">
                             <span className="text-base font-bold text-gray-900 line-clamp-2 leading-tight">{course.title}</span>
                             <div className="flex gap-2 flex-shrink-0">
-                              {!isCourseAccessible(course.id) && userData && (
+                              {!accessible && userData && (
                                 <Tag color="red" className="ml-2">Недоступен</Tag>
                               )}
                               {userData?.role === "admin" && (
@@ -184,12 +185,6 @@ export default function CoursesPage() {
           )}
         </div>
       </Content>
-      <Footer className="text-center bg-gray-900 text-gray-300 py-8 border-t border-gray-800">
-        <div className="max-w-7xl mx-auto px-4">
-          <p className="mb-2">© 2025 Онлайн Образование. Все права защищены.</p>
-          <p className="text-sm text-gray-500">Платформа для онлайн обучения</p>
-        </div>
-      </Footer>
     </Layout>
   );
 }

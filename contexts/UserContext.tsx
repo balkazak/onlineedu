@@ -5,7 +5,6 @@ import { onAuthStateChanged, User as FirebaseUser, signOut } from "firebase/auth
 import { auth } from "@/lib/firebase";
 import { getUserData } from "@/lib/api";
 import { User } from "@/lib/types";
-import Loader from "@/components/Loader";
 
 interface UserContextType {
   firebaseUser: FirebaseUser | null;
@@ -56,7 +55,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   return (
     <UserContext.Provider value={{ firebaseUser, userData, loading, logout, refreshUserData }}>
-      {loading ? <Loader /> : children}
+      {children}
     </UserContext.Provider>
   );
 }

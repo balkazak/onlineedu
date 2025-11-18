@@ -16,6 +16,30 @@ import { User, Course, Test } from "./types";
 import { createUserWithEmailAndPassword, signOut, signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "./firebase";
 
+const cache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_DURATION = 5 * 60 * 1000;
+
+const getCached = <T>(key: string): T | null => {
+  const cached = cache.get(key);
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data as T;
+  }
+  cache.delete(key);
+  return null;
+};
+
+const setCached = <T>(key: string, data: T): void => {
+  cache.set(key, { data, timestamp: Date.now() });
+};
+
+const invalidateCache = (pattern: string): void => {
+  for (const key of cache.keys()) {
+    if (key.includes(pattern)) {
+      cache.delete(key);
+    }
+  }
+};
+
 export const getUserData = async (email: string): Promise<User | null> => {
   if (!db) return null;
   try {
@@ -31,10 +55,14 @@ export const getUserData = async (email: string): Promise<User | null> => {
 };
 
 export const getAllCourses = async (): Promise<Course[]> => {
+  const cacheKey = "courses:all";
+  const cached = getCached<Course[]>(cacheKey);
+  if (cached) return cached;
+
   if (!db) return [];
   try {
     const coursesSnapshot = await getDocs(collection(db, "courses"));
-    return coursesSnapshot.docs.map(doc => {
+    const courses = coursesSnapshot.docs.map(doc => {
       const data = doc.data();
       return {
         id: doc.id,
@@ -44,6 +72,8 @@ export const getAllCourses = async (): Promise<Course[]> => {
         createdAt: data.createdAt
       } as Course;
     });
+    setCached(cacheKey, courses);
+    return courses;
   } catch (error) {
     console.error("Error getting courses:", error);
     return [];
@@ -51,18 +81,24 @@ export const getAllCourses = async (): Promise<Course[]> => {
 };
 
 export const getCourse = async (courseId: string): Promise<Course | null> => {
+  const cacheKey = `course:${courseId}`;
+  const cached = getCached<Course>(cacheKey);
+  if (cached) return cached;
+
   if (!db) return null;
   try {
     const courseDoc = await getDoc(doc(db, "courses", courseId));
     if (courseDoc.exists()) {
       const data = courseDoc.data();
-      return { 
+      const course = { 
         id: courseDoc.id, 
         title: data.title || "",
         description: data.description || "",
         lessons: data.lessons || [],
         createdAt: data.createdAt
       } as Course;
+      setCached(cacheKey, course);
+      return course;
     }
     return null;
   } catch (error) {
@@ -78,6 +114,7 @@ export const createCourse = async (course: Omit<Course, "id">): Promise<string |
       ...course,
       createdAt: new Date()
     });
+    invalidateCache("courses");
     return docRef.id;
   } catch (error) {
     console.error("Error creating course:", error);
@@ -89,6 +126,7 @@ export const updateCourse = async (courseId: string, course: Partial<Course>): P
   if (!db) return false;
   try {
     await updateDoc(doc(db, "courses", courseId), course);
+    invalidateCache("courses");
     return true;
   } catch (error) {
     console.error("Error updating course:", error);
@@ -100,6 +138,7 @@ export const deleteCourse = async (courseId: string): Promise<boolean> => {
   if (!db) return false;
   try {
     await deleteDoc(doc(db, "courses", courseId));
+    invalidateCache("courses");
     return true;
   } catch (error) {
     console.error("Error deleting course:", error);
@@ -108,10 +147,14 @@ export const deleteCourse = async (courseId: string): Promise<boolean> => {
 };
 
 export const getAllTests = async (): Promise<Test[]> => {
+  const cacheKey = "tests:all";
+  const cached = getCached<Test[]>(cacheKey);
+  if (cached) return cached;
+
   if (!db) return [];
   try {
     const testsSnapshot = await getDocs(collection(db, "tests"));
-    return testsSnapshot.docs.map(doc => {
+    const tests = testsSnapshot.docs.map(doc => {
       const data = doc.data();
       return {
         id: doc.id,
@@ -123,6 +166,8 @@ export const getAllTests = async (): Promise<Test[]> => {
         createdAt: data.createdAt
       } as Test;
     });
+    setCached(cacheKey, tests);
+    return tests;
   } catch (error) {
     console.error("Error getting tests:", error);
     return [];
@@ -130,12 +175,16 @@ export const getAllTests = async (): Promise<Test[]> => {
 };
 
 export const getTest = async (testId: string): Promise<Test | null> => {
+  const cacheKey = `test:${testId}`;
+  const cached = getCached<Test>(cacheKey);
+  if (cached) return cached;
+
   if (!db) return null;
   try {
     const testDoc = await getDoc(doc(db, "tests", testId));
     if (testDoc.exists()) {
       const data = testDoc.data();
-      return {
+      const test = {
         id: testDoc.id,
         title: data.title || "",
         description: data.description || "",
@@ -144,6 +193,8 @@ export const getTest = async (testId: string): Promise<Test | null> => {
         allowedUsers: data.allowedUsers || [],
         createdAt: data.createdAt
       } as Test;
+      setCached(cacheKey, test);
+      return test;
     }
     return null;
   } catch (error) {
@@ -159,6 +210,7 @@ export const createTest = async (test: Omit<Test, "id">): Promise<string | null>
       ...test,
       createdAt: new Date()
     });
+    invalidateCache("tests");
     return docRef.id;
   } catch (error) {
     console.error("Error creating test:", error);
@@ -170,6 +222,7 @@ export const updateTest = async (testId: string, test: Partial<Test>): Promise<b
   if (!db) return false;
   try {
     await updateDoc(doc(db, "tests", testId), test);
+    invalidateCache("tests");
     return true;
   } catch (error) {
     console.error("Error updating test:", error);
@@ -181,6 +234,7 @@ export const deleteTest = async (testId: string): Promise<boolean> => {
   if (!db) return false;
   try {
     await deleteDoc(doc(db, "tests", testId));
+    invalidateCache("tests");
     return true;
   } catch (error) {
     console.error("Error deleting test:", error);

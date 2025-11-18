@@ -314,12 +314,7 @@ export default function Home() {
           </div>
         </div>
       </Content>
-      <Footer className="text-center bg-gray-900 text-gray-300 py-8 border-t border-gray-800">
-        <div className="max-w-7xl mx-auto px-4">
-          <p className="mb-2">© 2025 {isKz ? "Онлайн Білім беру" : "Онлайн Образование"}. {isKz ? "Барлық құқықтар қорғалған" : "Все права защищены"}.</p>
-          <p className="text-sm text-gray-500">{isKz ? "Онлайн оқыту платформасы" : "Платформа для онлайн обучения"}</p>
-        </div>
-      </Footer>
+    
     </Layout>
   );
 }
