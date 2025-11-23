@@ -1,6 +1,6 @@
 export interface User {
   email: string;
-  role: "admin" | "student";
+  role: "admin" | "student" | "curator";
   allowedCourses: string[];
   allowedTests?: string[];
 }

@@ -36,10 +36,10 @@ export default function LoginPage() {
   return (
     <Layout className="min-h-screen bg-gray-50">
       <Header />
-      <Content className="flex items-center justify-center p-4 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-[calc(100vh-64px)]">
+      <Content className="flex items-center justify-center p-4 bg-gradient-to-br from-teal-50 via-teal-50 to-teal-100 min-h-[calc(100vh-64px)]">
         <Card className="w-full max-w-md shadow-2xl border-0 rounded-2xl overflow-hidden">
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <div className="w-16 h-16 bg-gradient-to-br from-teal-600 to-teal-700 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
               <UserOutlined className="text-white text-2xl" />
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -89,7 +89,7 @@ export default function LoginPage() {
               htmlType="submit"
               loading={loading}
               block
-              className="h-12 text-base font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 border-0 hover:from-blue-700 hover:to-indigo-700 shadow-lg"
+              className="h-12 text-base font-semibold bg-gradient-to-r from-teal-600 to-teal-700 border-0 hover:from-teal-700 hover:to-teal-800 shadow-lg"
             >
               Войти
             </Button>

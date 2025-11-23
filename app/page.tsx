@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, Row, Col, Button, Statistic, Tag, Radio, Space } from "antd";
+import { Card, Row, Col, Button, Statistic, Tag, Radio, Space, Carousel } from "antd";
 import { 
   BookOutlined, 
   UserOutlined, 
@@ -76,7 +76,44 @@ export default function Home() {
     <Layout className="min-h-screen">
       <Header />
       <Content className="relative">
-        <div className="relative min-h-screen bg-gradient-to-b from-sky-400 via-blue-500 to-indigo-600 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <Carousel 
+            autoplay 
+            effect="fade" 
+            className="w-full rounded-2xl overflow-hidden shadow-2xl border-4 border-white"
+            dots={{ className: "custom-dots" }}
+            arrows={true}
+          >
+            <div>
+              <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] bg-gray-100">
+                <img 
+                  src="/banner1.png" 
+                  alt="Banner 1" 
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            </div>
+            <div>
+              <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] bg-gray-100">
+                <img 
+                  src="/banner2.webp" 
+                  alt="Banner 2" 
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            </div>
+            <div>
+              <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] bg-gray-100">
+                <img 
+                  src="/banner3.jpg" 
+                  alt="Banner 3" 
+                  className="w-full h-full object-contain"
+                />
+              </div>
+            </div>
+          </Carousel>
+        </div>
+        <div className="relative min-h-screen bg-gradient-to-b from-teal-500 via-teal-600 to-teal-700 overflow-hidden">
           <div className="absolute inset-0">
             <div className="absolute top-20 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
             <div className="absolute top-40 right-20 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
@@ -98,7 +135,7 @@ export default function Home() {
                   <Button 
                     type="primary" 
                     size="large" 
-                    className="bg-white text-blue-600 border-0 h-14 px-10 text-lg font-semibold shadow-2xl hover:shadow-3xl hover:scale-105 transition-all"
+                    className="bg-white text-teal-600 border-0 h-14 px-10 text-lg font-semibold shadow-2xl hover:shadow-3xl hover:scale-105 transition-all"
                     onClick={() => router.push("/login")}
                   >
                     {isKz ? "Оқуды бастау" : "Начать обучение"}
@@ -123,8 +160,8 @@ export default function Home() {
                     <Statistic
                       title={<span className="text-gray-600 font-semibold">{isKz ? "Курстар" : "Курсы"}</span>}
                       value={50}
-                      prefix={<BookOutlined className="text-blue-600" />}
-                      valueStyle={{ color: '#1890ff', fontSize: '32px', fontWeight: 'bold' }}
+                      prefix={<BookOutlined className="text-teal-600" />}
+                      valueStyle={{ color: '#14b8a6', fontSize: '32px', fontWeight: 'bold' }}
                     />
                   </Card>
                 </Col>
@@ -168,7 +205,7 @@ export default function Home() {
                 <Row gutter={[32, 32]}>
                   <Col xs={24} md={12}>
                     <div className="space-y-4">
-                      <h3 className="text-2xl font-semibold text-blue-600 flex items-center gap-2">
+                      <h3 className="text-2xl font-semibold text-teal-600 flex items-center gap-2">
                         <BookOutlined />
                         {isKz ? "Біздің миссия" : "Наша миссия"}
                       </h3>
@@ -215,7 +252,7 @@ export default function Home() {
                 <div className="max-w-2xl mx-auto">
                   {currentQuestion < demoQuestions.length ? (
                     <div className="space-y-6">
-                      <div className="bg-blue-50 rounded-xl p-6">
+                      <div className="bg-teal-50 rounded-xl p-6">
                         <div className="flex items-center justify-between mb-4">
                           <Tag color="blue" className="text-base px-4 py-1">
                             {isKz ? "Сұрақ" : "Вопрос"} {currentQuestion + 1} / {demoQuestions.length}
@@ -247,7 +284,7 @@ export default function Home() {
                                   className += " border-gray-200";
                                 }
                               } else {
-                                className += " border-gray-300 hover:border-blue-500 hover:bg-blue-50";
+                                className += " border-gray-300 hover:border-teal-500 hover:bg-teal-50";
                               }
 
                               return (
@@ -278,7 +315,7 @@ export default function Home() {
                                 type="primary" 
                                 size="large"
                                 onClick={nextQuestion}
-                                className="bg-blue-600 hover:bg-blue-700"
+                                className="bg-teal-600 hover:bg-teal-700"
                               >
                                 {isKz ? "Келесі сұрақ" : "Следующий вопрос"}
                                 <ArrowRightOutlined className="ml-2" />
@@ -297,7 +334,7 @@ export default function Home() {
                                   type="primary" 
                                   size="large"
                                   onClick={resetQuiz}
-                                  className="bg-blue-600 hover:bg-blue-700"
+                                  className="bg-teal-600 hover:bg-teal-700"
                                 >
                                   {isKz ? "Қайта бастау" : "Начать заново"}
                                 </Button>

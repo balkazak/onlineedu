@@ -35,7 +35,7 @@ export default function AdminPage() {
     );
   }
 
-  if (userData?.role !== "admin") {
+  if (userData?.role !== "admin" && userData?.role !== "curator") {
     return (
       <Layout className="min-h-screen bg-gray-50">
         <Header />
@@ -45,9 +45,7 @@ export default function AdminPage() {
             title="403"
             subTitle="У вас нет доступа к этой странице."
             extra={
-              <Button type="primary" onClick={() => router.push("/")}>
-                На главную
-              </Button>
+              <Button type="primary" onClick={() => router.push("/")}>На главную</Button>
             }
           />
         </Content>
@@ -55,50 +53,63 @@ export default function AdminPage() {
     );
   }
 
-  const tabItems = [
-    {
-      key: "courses",
-      label: (
-        <span>
-          <BookOutlined />
-          Курсы
-        </span>
-      ),
-      children: <CoursesManagement />,
-    },
-    {
-      key: "tests",
-      label: (
-        <span>
-          <FileTextOutlined />
-          Тесты
-        </span>
-      ),
-      children: <TestsManagement />,
-    },
-    {
-      key: "users",
-      label: (
-        <span>
-          <UserOutlined />
-          Пользователи
-        </span>
-      ),
-      children: <UsersManagement />,
-    },
-  ];
+  const tabItems = userData?.role === "curator"
+    ? [
+        {
+          key: "users",
+          label: (
+            <span>
+              <UserOutlined />
+              Пользователи
+            </span>
+          ),
+          children: <UsersManagement />,         
+        },
+      ]
+    : [
+        {
+          key: "courses",
+          label: (
+            <span>
+              <BookOutlined />
+              Курсы
+            </span>
+          ),
+          children: <CoursesManagement />,
+        },
+        {
+          key: "tests",
+          label: (
+            <span>
+              <FileTextOutlined />
+              Тесты
+            </span>
+          ),
+          children: <TestsManagement />,
+        },
+        {
+          key: "users",
+          label: (
+            <span>
+              <UserOutlined />
+              Пользователи
+            </span>
+          ),
+          children: <UsersManagement />,         
+        },
+      ];
 
   return (
     <Layout className="min-h-screen bg-gray-50">
       <Header />
       <Content>
-        <div className="relative bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 text-white py-16 overflow-hidden">
+        <div className="relative bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800 text-white py-16 overflow-hidden">
           <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px]" />
           <div className="relative max-w-7xl mx-auto px-4 text-center">
             <h1 className="text-5xl md:text-6xl font-bold mb-4 leading-tight">
               Панель администратора
             </h1>
-            <p className="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto">
+            <p className="text-xl md:text-2xl text-teal-100 max-w-2xl mx-auto">
               Управление курсами, тестами и пользователями
             </p>
           </div>
@@ -106,7 +117,7 @@ export default function AdminPage() {
 
         <div className="max-w-7xl mx-auto px-4 py-12">
           <Card className="shadow-xl border-0 rounded-2xl">
-            <Tabs defaultActiveKey="courses" items={tabItems} size="large" />
+            <Tabs defaultActiveKey={userData?.role === "curator" ? "users" : "courses"} items={tabItems} size="large" />
           </Card>
         </div>
       </Content>

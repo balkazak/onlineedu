@@ -67,13 +67,13 @@ export default function TestsPage() {
     <Layout className="min-h-screen bg-gray-50">
       <Header />
       <Content>
-        <div className="relative bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 text-white py-16 overflow-hidden">
+        <div className="relative bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800 text-white py-16 overflow-hidden">
           <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px]" />
           <div className="relative max-w-7xl mx-auto px-4 text-center">
             <h1 className="text-5xl md:text-6xl font-bold mb-4 leading-tight">
               Тесты
             </h1>
-            <p className="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto">
+            <p className="text-xl md:text-2xl text-teal-100 max-w-2xl mx-auto">
               Проверьте свои знания, пройдя тесты
             </p>
           </div>
@@ -115,7 +115,7 @@ export default function TestsPage() {
                           style={{ padding: "0 18px", height: 36, fontSize: 15, borderRadius: 8, minWidth: 128 }}
                           className={`font-semibold border-0 m-0 ${
                             accessible
-                              ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                              ? "bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800"
                               : "bg-gray-400 hover:bg-gray-500"
                           }`}
                         >

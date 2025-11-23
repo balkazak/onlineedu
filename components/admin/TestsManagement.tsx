@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Table, Button, Modal, Form, Input, message, Popconfirm, Space, InputNumber, Select, Tag } from "antd";
+import { Table, Button, Modal, Form, Input, message, Popconfirm, Space, InputNumber, Select, Tag, Radio } from "antd";
 import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { Test, TestQuestion } from "@/lib/types";
 import { getAllTests, createTest, updateTest, deleteTest, getAllUsers } from "@/lib/api";
@@ -32,11 +32,11 @@ export default function TestsManagement() {
   const handleAdd = () => {
     setEditingTest(null);
     form.resetFields();
-    form.setFieldsValue({ 
-      questions: [{ 
-        q: "", 
-        options: ["", "", ""], 
-        answer: "" 
+    form.setFieldsValue({
+      questions: [{
+        q: "",
+        options: ["a", "b", "c", "d"],
+        answer: "a"
       }],
       timeLimit: 30,
       allowedUsers: []
@@ -67,7 +67,7 @@ export default function TestsManagement() {
         options: Array.isArray(q.options) ? q.options.filter((opt: string) => opt && opt.trim()) : [],
         answer: q.answer,
       }))
-      .filter((q: TestQuestion) => 
+      .filter((q: TestQuestion) =>
         q.q && q.options.length >= 2 && q.answer
       );
 
@@ -110,6 +110,8 @@ export default function TestsManagement() {
     }
   };
 
+  const optionLabel = (idx: number) => String.fromCharCode(97 + idx); // a, b, c, ...
+
   const columns = [
     {
       title: "Название",
@@ -130,8 +132,8 @@ export default function TestsManagement() {
     {
       title: "Доступ",
       key: "access",
-      render: (_: any, record: Test) => 
-        record.allowedUsers && record.allowedUsers.length > 0 
+      render: (_: any, record: Test) =>
+        record.allowedUsers && record.allowedUsers.length > 0
           ? <Tag color="orange">{record.allowedUsers.length} пользователей</Tag>
           : <Tag color="green">Все</Tag>,
     },
@@ -256,14 +258,7 @@ export default function TestsManagement() {
                   <div key={key} className="mb-4 p-4 border rounded">
                     <div className="flex justify-between items-center mb-2">
                       <span className="font-semibold">Вопрос {name + 1}</span>
-                      <Button
-                        type="link"
-                        danger
-                        onClick={() => remove(name)}
-                        size="small"
-                      >
-                        Удалить
-                      </Button>
+                      <Button type="link" danger onClick={() => remove(name)} size="small">Удалить</Button>
                     </div>
                     <Form.Item
                       {...restField}
@@ -274,56 +269,69 @@ export default function TestsManagement() {
                       <Input placeholder="Текст вопроса" />
                     </Form.Item>
                     <Form.List name={[name, "options"]}>
-                      {(optionFields, { add: addOption, remove: removeOption }) => (
-                        <>
-                          {optionFields.map(({ key: optKey, name: optName, ...optRestField }) => (
-                            <Form.Item
-                              {...optRestField}
-                              name={optName}
-                              key={optKey}
-                              label={optName === 0 ? "Варианты ответов" : ""}
-                              rules={[{ required: true, message: "Введите вариант" }]}
-                            >
-                              <Input
-                                placeholder={`Вариант ${optName + 1}`}
-                                suffix={
-                                  optionFields.length > 2 ? (
-                                    <Button
-                                      type="link"
-                                      danger
-                                      onClick={() => removeOption(optName)}
-                                      size="small"
-                                    >
-                                      Удалить
-                                    </Button>
-                                  ) : null
-                                }
-                              />
+                      {(optionFields, { add: addOption, remove: removeOption }) => {
+                        // auto-add 4 by default (for new)
+                        if (optionFields.length < 4) {
+                          for (let i = optionFields.length; i < 4; i++) addOption(undefined, i);
+                        }
+                        return (
+                          <>
+                            {optionFields.map((fld, idx) => (
+                              <div key={fld.key} className="flex items-center gap-2">
+                                <Form.Item
+                                  {...fld}
+                                  name={fld.name}
+                                  label={<span className="font-semibold">{String.fromCharCode(97 + idx)})</span>}
+                                  rules={[{ required: true, message: "Вариант обязателен" }]}
+                                  className="flex-1"
+                                >
+                                  <Input placeholder={`Вариант ${String.fromCharCode(97 + idx)}`} />
+                                </Form.Item>
+                                {/* Удалять только если вариантов больше 4 и это не первые четыре */}
+                                {optionFields.length > 4 && idx >= 4 && (
+                                  <Button danger size="small" onClick={() => removeOption(fld.name)}>
+                                    Удалить
+                                  </Button>
+                                )}
+                              </div>
+                            ))}
+                            {/* Выберем правильный через radio */}
+                            <Form.Item label="Выберите правильный вариант" shouldUpdate>
+                              {() => {
+                                const options = optionFields.map(fld=> form.getFieldValue(["questions", name, "options", fld.name]));
+                                const answer = form.getFieldValue(["questions", name, "answer"]);
+                                const current = options.findIndex(o => o === answer);
+                                return (
+                                  <Radio.Group
+                                    value={current === -1 ? 0 : current}
+                                    onChange={e => {
+                                      const idx = e.target.value;
+                                      form.setFieldValue(["questions", name, "answer"], options[idx]);
+                                    }}
+                                  >
+                                    {options.map((_, idx) => (
+                                      <Radio key={idx} value={idx}>{String.fromCharCode(97 + idx)})</Radio>
+                                    ))}
+                                  </Radio.Group>
+                                );
+                              }}
                             </Form.Item>
-                          ))}
-                          {optionFields.length < 6 && (
-                            <Form.Item>
-                              <Button
-                                type="dashed"
-                                onClick={() => addOption()}
-                                block
-                                size="small"
-                              >
-                                Добавить вариант
-                              </Button>
-                            </Form.Item>
-                          )}
-                        </>
-                      )}
+                            {optionFields.length < 8 && (
+                              <Form.Item>
+                                <Button
+                                  type="dashed"
+                                  onClick={() => addOption()}
+                                  block
+                                  size="small"
+                                >
+                                  Добавить вариант
+                                </Button>
+                              </Form.Item>
+                            )}
+                          </>
+                        )}
+                      }
                     </Form.List>
-                    <Form.Item
-                      {...restField}
-                      name={[name, "answer"]}
-                      label="Правильный ответ"
-                      rules={[{ required: true, message: "Выберите правильный ответ" }]}
-                    >
-                      <Input placeholder="Точный текст правильного ответа" />
-                    </Form.Item>
                   </div>
                 ))}
                 <Form.Item>

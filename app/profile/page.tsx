@@ -22,13 +22,13 @@ export default function ProfilePage() {
     <Layout className="min-h-screen bg-gray-50">
       <Header />
       <Content>
-        <div className="relative bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 text-white py-16 overflow-hidden">
+        <div className="relative bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800 text-white py-16 overflow-hidden">
           <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px]" />
           <div className="relative max-w-7xl mx-auto px-4 text-center">
             <h1 className="text-5xl md:text-6xl font-bold mb-4 leading-tight">
               Профиль
             </h1>
-            <p className="text-xl md:text-2xl text-blue-100 max-w-2xl mx-auto">
+            <p className="text-xl md:text-2xl text-teal-100 max-w-2xl mx-auto">
               Информация о вашем аккаунте
             </p>
           </div>

@@ -103,8 +103,12 @@ export default function UsersManagement() {
       dataIndex: "role",
       key: "role",
       render: (role: string) => (
-        <span className={role === "admin" ? "text-red-600 font-semibold" : ""}>
-          {role === "admin" ? "Администратор" : "Студент"}
+        <span className={role === "admin" ? "text-red-600 font-semibold" : role === "curator" ? "text-teal-600 font-semibold" : ""}>
+          {role === "admin"
+            ? "Администратор"
+            : role === "curator"
+            ? "Куратор"
+            : "Студент"}
         </span>
       ),
     },
@@ -227,6 +231,7 @@ export default function UsersManagement() {
           >
             <Select>
               <Option value="student">Студент</Option>
+              <Option value="curator">Куратор</Option>
               <Option value="admin">Администратор</Option>
             </Select>
           </Form.Item>

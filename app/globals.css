@@ -3,3 +3,96 @@
 .ytp-chrome-top.ytp-youtube-button.ytp-button.yt-uix-sessionlink {
   display: none !important;
 }
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.blink-animation {
+  animation: blink 1.5s ease-in-out infinite;
+}
+
+@keyframes blinkRed {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.blinking-red-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #ff0000;
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: 4px;
+  animation: blinkRed 1s ease-in-out infinite;
+}
+
+.custom-dots li button {
+  background: rgba(255, 255, 255, 0.5) !important;
+  border: 2px solid rgba(255, 255, 255, 0.8) !important;
+  width: 12px !important;
+  height: 12px !important;
+  border-radius: 50% !important;
+}
+
+.custom-dots li.slick-active button {
+  background: rgba(255, 255, 255, 1) !important;
+  border-color: rgba(255, 255, 255, 1) !important;
+  width: 16px !important;
+  height: 16px !important;
+}
+
+.custom-dots {
+  bottom: 20px !important;
+  z-index: 10 !important;
+}
+
+.custom-dots li {
+  margin: 0 8px !important;
+}
+
+.ant-carousel .slick-prev,
+.ant-carousel .slick-next {
+  z-index: 10;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  color: #1890ff !important;
+  font-size: 20px;
+}
+
+
+.ant-carousel .slick-prev {
+  left: 10px !important;
+  inset-inline-start: 10px !important;
+}
+
+.ant-carousel .slick-next {
+  right: 10px !important;
+  inset-inline-end: 10px !important;
+}
+
+.ant-carousel .slick-prev::before,
+.ant-carousel .slick-next::before {
+  display: none;
+}
+
+.ant-carousel {
+  position: relative;
+}
+
+.ant-carousel .slick-prev,
+.ant-carousel .slick-next {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}

@@ -67,13 +67,13 @@ export default function CoursesPage() {
     <Layout className="min-h-screen bg-gray-50">
       <Header />
       <Content>
-        <div className="relative bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 text-white py-16 overflow-hidden">
+        <div className="relative bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800 text-white py-16 overflow-hidden">
           <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px]" />
           <div className="relative max-w-7xl mx-auto px-4 text-center">
             <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
               Курсы
             </h1>
-            <p className="text-xl md:text-2xl mb-10 text-blue-100 max-w-2xl mx-auto">
+            <p className="text-xl md:text-2xl mb-10 text-teal-100 max-w-2xl mx-auto">
               Выберите курс и начните обучение
             </p>
           </div>
@@ -107,15 +107,15 @@ export default function CoursesPage() {
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
                             <div className="absolute inset-0 flex items-center justify-center">
                               <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center transform group-hover:scale-110 transition-transform shadow-lg">
-                                <PlayCircleOutlined className="text-blue-600 text-xl" />
+                                <PlayCircleOutlined className="text-teal-600 text-xl" />
                               </div>
                             </div>
                           </div>
                         ) : (
-                          <div className="h-52 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-600 flex items-center justify-center w-full">
+                          <div className="h-52 bg-gradient-to-br from-teal-500 via-teal-600 to-teal-700 flex items-center justify-center w-full">
                             <div className="flex items-center justify-center w-full h-full">
                               <div className="w-12 h-12 bg-white/90 rounded-full flex items-center justify-center shadow-lg">
-                                <PlayCircleOutlined className="text-blue-600 text-xl" />
+                                <PlayCircleOutlined className="text-teal-600 text-xl" />
                               </div>
                             </div>
                           </div>
@@ -142,7 +142,7 @@ export default function CoursesPage() {
                           style={{ padding: "0 18px", height: 36, fontSize: 15, borderRadius: 8, minWidth: 128 }}
                           className={`font-semibold border-0 m-0 ${
                             accessible
-                              ? "bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                              ? "bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800"
                               : "bg-gray-400 hover:bg-gray-500"
                           }`}
                         >

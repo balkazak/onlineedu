@@ -136,14 +136,14 @@ export default function CoursePage() {
                     key={lesson.id}
                     className={`rounded-lg border transition-all duration-200 ${
                       selectedLesson?.id === lesson.id
-                        ? "bg-blue-50 border-blue-300 shadow-md"
-                        : "bg-white border-gray-200 hover:border-blue-300 hover:shadow-sm"
+                        ? "bg-teal-50 border-teal-300 shadow-md"
+                        : "bg-white border-gray-200 hover:border-teal-300 hover:shadow-sm"
                     }`}
                   >
                     <div className="p-3">
                       <div className="flex items-start justify-between gap-3 mb-2">
                         <h4 className={`text-sm font-semibold flex-1 leading-tight ${
-                          selectedLesson?.id === lesson.id ? "text-blue-700" : "text-gray-900"
+                          selectedLesson?.id === lesson.id ? "text-teal-700" : "text-gray-900"
                         }`}>
                           {lesson.title}
                         </h4>
@@ -152,7 +152,7 @@ export default function CoursePage() {
                           size="small"
                           className={`text-xs font-medium rounded-md ${
                             selectedLesson?.id === lesson.id
-                              ? "bg-blue-600 border-blue-600 hover:bg-blue-700"
+                              ? "bg-teal-600 border-teal-600 hover:bg-teal-700"
                               : "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200"
                           }`}
                           style={{ minWidth: 100, height: 28, padding: "0 12px" }}
@@ -184,7 +184,7 @@ export default function CoursePage() {
           <Button
             icon={<ArrowLeftOutlined />}
             onClick={() => router.push("/courses")}
-            className="mb-6 border-none shadow-md bg-blue-500 text-white hover:bg-blue-600 hover:text-white px-6 py-2 rounded-lg text-base font-medium flex items-center gap-2"
+            className="mb-6 border-none shadow-md bg-teal-600 text-white hover:bg-teal-700 hover:text-white px-6 py-2 rounded-lg text-base font-medium flex items-center gap-2"
           >
             Назад к курсам
           </Button>
@@ -228,7 +228,7 @@ export default function CoursePage() {
                 </div>
               </div>
             ) : (
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 h-96 flex items-center justify-center rounded-xl">
+              <div className="bg-gradient-to-br from-teal-50 to-teal-100 h-96 flex items-center justify-center rounded-xl">
                 <p className="text-gray-500 text-lg">Выберите урок из меню слева</p>
               </div>
             )}
@@ -252,7 +252,7 @@ export default function CoursePage() {
                             setTestResults(null);
                             setTestSubmitted(false);
                           }}
-                          className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 border-0"
+                          className="bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 border-0"
                         >
                           Открыть тест
                         </Button>
@@ -292,7 +292,7 @@ export default function CoursePage() {
                               >
                                 <div className="mb-4">
                                   <div className="flex items-start gap-3 mb-3">
-                                    <span className="font-bold text-lg text-blue-600">{qIndex + 1}.</span>
+                                    <span className="font-bold text-lg text-teal-600">{qIndex + 1}.</span>
                                     <div className="flex-1">
                                       <div className="flex items-center gap-2 mb-2">
                                         <p className="text-base font-medium text-gray-800">{question.q}</p>
@@ -390,7 +390,7 @@ export default function CoursePage() {
                               size="large"
                               onClick={() => {
                                 const results: Record<number, boolean> = {};
-                                selectedLesson.test.questions.forEach((question, index) => {
+                                (selectedLesson?.test?.questions || []).forEach((question, index) => {
                                   results[index] = testAnswers[index] === question.answer;
                                 });
                                 setTestResults(results);
@@ -409,7 +409,7 @@ export default function CoursePage() {
                                 }
                               }}
                               disabled={Object.keys(testAnswers).length !== selectedLesson.test.questions.length}
-                              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 border-0"
+                              className="bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 border-0"
                             >
                               Отправить ответы
                             </Button>
@@ -420,9 +420,9 @@ export default function CoursePage() {
                             )}
                           </div>
                         ) : (
-                          <div className="mt-6 p-6 bg-blue-50 border border-blue-200 rounded-xl text-center">
+                          <div className="mt-6 p-6 bg-teal-50 border border-teal-200 rounded-xl text-center">
                             <h4 className="text-lg font-semibold text-gray-800 mb-2">Результаты теста</h4>
-                            <p className="text-2xl font-bold text-blue-600 mb-2">
+                            <p className="text-2xl font-bold text-teal-600 mb-2">
                               {Object.values(testResults || {}).filter(r => r).length} / {selectedLesson.test.questions.length}
                             </p>
                             <p className="text-gray-600 mb-4">
