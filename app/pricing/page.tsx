@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Card, Form, Input, Button, Select, message, Layout, Row, Col, Tag } from "antd";
-import { VideoCameraOutlined, MailOutlined, PhoneOutlined, MessageOutlined, CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
+import { VideoCameraOutlined, PhoneOutlined, MessageOutlined, CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 
@@ -75,29 +75,36 @@ export default function PricingPage() {
   const router = useRouter();
 
   const onFinish = async (values: {
-    email: string;
     phone: string;
     plan: string;
     comment?: string;
   }) => {
     setLoading(true);
     try {
-      const response = await fetch("/api/submit-application", {
+      // Build Russian-labeled payload so Formspree email shows Russian field names
+      const planName = pricingPlans.find((p) => p.id === values.plan)?.name || values.plan;
+      const payload: Record<string, string> = {
+        Телефон: values.phone || "",
+        Тариф: planName,
+        Комментарий: values.comment || "",
+      };
+
+      const response = await fetch("https://formspree.io/f/mjkqgwya", {
         method: "POST",
         headers: {
+          "Accept": "application/json",
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(values),
+        body: JSON.stringify(payload),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
+      if (response.ok) {
+        message.success("Заявка успешно отправлена! Мы свяжемся с вами в ближайшее время.");
+        form.resetFields();
+      } else {
+        const data = await response.json();
         throw new Error(data.error || "Ошибка при отправке заявки");
       }
-
-      message.success("Заявка успешно отправлена! Мы свяжемся с вами в ближайшее время.");
-      form.resetFields();
     } catch (error: any) {
       message.error(error.message || "Произошла ошибка при отправке заявки");
     } finally {
@@ -124,86 +131,50 @@ export default function PricingPage() {
             {pricingPlans.map((plan) => (
               <Col xs={24} md={12} key={plan.id}>
                 <Card
-                  className={`h-full shadow-xl border-0 rounded-2xl overflow-hidden ${
-                    plan.id === "annual"
-                      ? "bg-gradient-to-br from-teal-700 to-teal-800 text-white border-4 border-green-400"
-                      : "bg-gray-100"
-                  }`}
+                    className={`h-full shadow-xl border-0 rounded-2xl overflow-hidden bg-gray-100`}
                 >
                   <div className="text-center mb-6">
-                    <h2 className={`text-2xl font-bold mb-2 ${plan.id === "annual" ? "text-white" : "text-teal-800"}`}>
+                      <h2 className={`text-2xl font-bold mb-2 text-teal-800`}>
                       {plan.name}
                     </h2>
                     {plan.originalPrice && (
                       <div className="mb-2">
-                        <span className={`text-lg line-through opacity-70 ${plan.id === "annual" ? "text-white" : "text-gray-500"}`}>
-                          {plan.originalPrice.toLocaleString()} 〒
-                        </span>
+                          <span className={`text-lg line-through opacity-70 text-gray-500`}>
+                            {plan.originalPrice.toLocaleString()} 〒
+                          </span>
                       </div>
                     )}
                     <div className="flex items-center justify-center gap-2">
-                      <span className={`text-4xl font-bold ${plan.id === "annual" ? "text-green-300" : "text-teal-700"}`}>
-                        {plan.price.toLocaleString()} 〒
-                      </span>
+                        <span className={`text-4xl font-bold text-teal-700`}>
+                          {plan.price.toLocaleString()} 〒
+                        </span>
                     </div>
                   </div>
 
                   <div className="space-y-3">
-                    {plan.features.included.map((feature, index) => (
-                      <div key={index} className="flex items-start gap-2">
-                        <CheckCircleOutlined
-                          className={`text-lg mt-1 ${plan.id === "annual" ? "text-green-300" : "text-green-500"}`}
-                        />
-                        <span className={plan.id === "annual" ? "text-white" : "text-gray-700"}>
-                          {feature}
-                        </span>
-                      </div>
-                    ))}
-                    {plan.features.excluded.map((feature, index) => (
-                      <div key={index} className="flex items-start gap-2 opacity-50">
-                        <CloseCircleOutlined
-                          className={`text-lg mt-1 ${plan.id === "annual" ? "text-white/70" : "text-gray-400"}`}
-                        />
-                        <span className={plan.id === "annual" ? "text-white/80" : "text-gray-500"}>
-                          {feature}
-                        </span>
-                      </div>
-                    ))}
+                      {plan.features.included.map((feature, index) => (
+                        <div key={index} className="flex items-start gap-2">
+                          <CheckCircleOutlined className="text-lg mt-1 text-green-500" />
+                          <span className="text-gray-700">{feature}</span>
+                        </div>
+                      ))}
+                      {plan.features.excluded.map((feature, index) => (
+                        <div key={index} className="flex items-start gap-2 opacity-50">
+                          <CloseCircleOutlined className="text-lg mt-1 text-gray-400" />
+                          <span className="text-gray-500">{feature}</span>
+                        </div>
+                      ))}
                   </div>
                 </Card>
               </Col>
             ))}
           </Row>
 
-          <Card className="shadow-xl border-0 rounded-2xl border-t-4 border-teal-600">
-            <h2 className="text-3xl font-bold text-teal-800 mb-6 text-center">
-              Оставить заявку
-            </h2>
-            <Form
-              form={form}
-              onFinish={onFinish}
-              layout="vertical"
-              size="large"
-              className=""
-            >
-              <Row gutter={[16, 0]}>
-                <Col xs={24} sm={12}>
-                  <Form.Item
-                    name="email"
-                    label="Email"
-                    rules={[
-                      { required: true, message: "Введите email" },
-                      { type: "email", message: "Введите корректный email" },
-                    ]}
-                  >
-                    <Input
-                      prefix={<MailOutlined className="text-teal-500" />}
-                      placeholder="example@mail.com"
-                      className="border-teal-300 focus:border-teal-500"
-                    />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12}>
+          <Card className="shadow-xl border-0 rounded-2xl border-t-4 border-teal-600 p-6 mx-auto max-w-lg">
+            <h2 className="text-2xl font-bold text-teal-800 mb-4 text-center">Оставить заявку</h2>
+            <Form form={form} onFinish={onFinish} layout="vertical" size="middle" className="mx-auto">
+              <Row gutter={[12, 8]}>
+                <Col xs={24}>
                   <Form.Item
                     name="phone"
                     label="Номер телефона"
@@ -216,53 +187,43 @@ export default function PricingPage() {
                       prefix={<PhoneOutlined className="text-teal-500" />}
                       placeholder="+7 (XXX) XXX-XX-XX"
                       className="border-teal-300 focus:border-teal-500"
+                      style={{ textAlign: "center" }}
                     />
+                  </Form.Item>
+                </Col>
+
+                <Col xs={24}>
+                  <Form.Item name="plan" label="Тариф" rules={[{ required: true, message: "Выберите тариф" }]}>
+                    <Select placeholder="Выберите тариф" className="border-teal-300" style={{ textAlign: "center" }}>
+                      {pricingPlans.map((plan) => (
+                        <Option key={plan.id} value={plan.id}>
+                          {plan.name}
+                        </Option>
+                      ))}
+                    </Select>
+                  </Form.Item>
+                </Col>
+
+                <Col xs={24}>
+                  <Form.Item name="comment" label="Комментарий (необязательно)">
+                    <TextArea rows={3} placeholder="Оставьте комментарий или вопрос..." showCount maxLength={300} style={{ textAlign: "center" }} />
                   </Form.Item>
                 </Col>
               </Row>
 
-              <Form.Item
-                name="plan"
-                label="Выберите тариф"
-                rules={[{ required: true, message: "Выберите тариф" }]}
-              >
-                <Select 
-                  placeholder="Выберите тариф"
-                  className="border-teal-300"
-                >
-                  {pricingPlans.map((plan) => (
-                    <Option key={plan.id} value={plan.id}>
-                      {plan.name} - {plan.price.toLocaleString()} 〒
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
-
-              <Form.Item
-                name="comment"
-                label="Комментарий (необязательно)"
-              >
-                <TextArea
-                  rows={4}
-                  placeholder="Оставьте комментарий или вопрос..."
-                  showCount
-                  maxLength={500}
-                  className="border-teal-300 focus:border-teal-500"
-                />
-              </Form.Item>
-
-              <Form.Item>
+              <Form.Item className="mb-0">
+                <div className="flex justify-center">
                   <Button
-                  type="primary"
-                  htmlType="submit"
-                  loading={loading}
-                  block
-                  size="large"
-                  className="h-14 bg-gradient-to-r from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 border-none shadow-lg rounded-xl text-lg font-semibold"
-                  icon={<MessageOutlined />}
-                >
-                  Отправить заявку
-                </Button>
+                    type="primary"
+                    htmlType="submit"
+                    loading={loading}
+                    size="middle"
+                    className="bg-gradient-to-r from-teal-600 to-teal-700 border-none shadow rounded-md text-base font-semibold px-6"
+                    icon={<MessageOutlined />}
+                  >
+                    Отправить
+                  </Button>
+                </div>
               </Form.Item>
             </Form>
           </Card>

@@ -34,19 +34,33 @@ export default function Header() {
   }, [logout, router]);
 
   const userMenuItems = useMemo(() => [
-    {
-      key: "profile",
-      icon: <UserOutlined />, 
-      label: t("profile"),
-      onClick: () => {
-        router.push("/profile");
-        setMobileMenuOpen(false);
+    ...(userData ? [
+      {
+        key: "profile",
+        icon: <UserOutlined />,
+        label: t("profile"),
+        onClick: () => {
+          router.push("/profile");
+          setMobileMenuOpen(false);
+        },
       },
-    },
+    ] : []),
+    // admin item for admins/curators
+    ...(userData && (userData.role === "admin" || userData.role === "curator") ? [
+      {
+        key: "admin",
+        icon: <SettingOutlined />,
+        label: t("admin"),
+        onClick: () => {
+          router.push("/admin");
+          setMobileMenuOpen(false);
+        },
+      },
+    ] : []),
     { type: "divider" as const },
     {
       key: "logout",
-      icon: <LogoutOutlined />, 
+      icon: <LogoutOutlined />,
       label: t("logout"),
       onClick: handleLogout,
     },
@@ -61,9 +75,7 @@ export default function Header() {
       { href: "/nzm-calculator", label: t("nzmCalculator"), icon: <CalculatorOutlined /> },
       { href: "/pricing", label: t("pricing"), icon: <DollarOutlined /> },
     ];
-    if (userData?.role === "admin" || userData?.role === "curator") {
-      links.push({ href: "/admin", label: t("admin"), icon: <SettingOutlined /> });
-    }
+    // admin link removed from main nav - will be available in user menu
     return links;
   }, [userData?.role, t]);
 
@@ -96,14 +108,15 @@ export default function Header() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                    style={{ color: isActive ? undefined : '#374151' }}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 no-underline ${
                       isActive
                         ? "bg-gradient-to-r from-teal-600 to-teal-700 text-white shadow-lg"
                         : "text-gray-700 hover:bg-teal-50 hover:text-teal-700"
                     }`}
                   >
-                    <span className={`text-base ${isActive ? "text-white" : ""}`}>{link.icon}</span>
-                    <span className={isActive ? "text-white" : ""}>{link.label}</span>
+                    <span style={{ color: isActive ? '#fff' : '#374151' }} className="text-base">{link.icon}</span>
+                    <span style={{ color: isActive ? '#fff' : '#374151' }}>{link.label}</span>
                     {link.isBlinking && (
                       <span className="blinking-red-dot"></span>
                     )}
@@ -115,7 +128,7 @@ export default function Header() {
 
           <div className="flex items-center gap-3">
             <Dropdown menu={{ items: languageMenuItems }} placement="bottomRight" trigger={['click']}>
-              <button className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-teal-50 transition-all duration-200 cursor-pointer border border-gray-200 hover:border-teal-300">
+              <button className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-teal-50 transition-all duration-200 cursor-pointer border border-gray-200 hover:border-teal-300 text-gray-700">
                 <GlobalOutlined className="text-teal-600" />
                 <span className="hidden sm:block text-sm font-semibold text-gray-700">
                   {language === "ru" ? "РУ" : "ҚЗ"}
@@ -125,7 +138,7 @@ export default function Header() {
 
             {userData || firebaseUser ? (
               <Dropdown menu={{ items: userMenuItems }} placement="bottomRight" trigger={['click']}>
-                <button className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-teal-50 transition-all duration-200 cursor-pointer border border-gray-200 hover:border-teal-300">
+                <button className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-teal-50 transition-all duration-200 cursor-pointer border border-gray-200 hover:border-teal-300 text-gray-700">
                   <Avatar 
                     size="default" 
                     icon={<UserOutlined />}
@@ -137,7 +150,7 @@ export default function Header() {
                 </button>
               </Dropdown>
             ) : (
-              <Space className="hidden sm:flex" size="middle">
+                <Space className="hidden sm:flex" size="middle">
                 <Button 
                   type="text" 
                   onClick={() => router.push("/login")}
@@ -170,24 +183,25 @@ export default function Header() {
           <div className="px-4 pt-3 pb-4 space-y-2">
             {navLinks.map((link) => {
               const isActive = pathname === link.href || (link.href === "/" && pathname === "/") || (link.href === "/courses" && pathname.startsWith("/course")) || (link.href === "/tests" && pathname.startsWith("/test")) || (link.href === "/trial-test" && pathname.startsWith("/trial-test")) || (link.href === "/nzm-calculator" && pathname.startsWith("/nzm-calculator")) || (link.href === "/pricing" && pathname.startsWith("/pricing"));
-              return (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-base font-semibold transition-all ${
-                    isActive
-                      ? "bg-gradient-to-r from-teal-600 to-teal-700 text-white shadow-lg"
-                      : "text-gray-700 hover:bg-teal-50"
-                  }`}
-                >
-                  <span className={`text-lg ${isActive ? "text-white" : ""}`}>{link.icon}</span>
-                  <span className={isActive ? "text-white" : ""}>{link.label}</span>
-                  {link.isBlinking && (
-                    <span className="blinking-red-dot"></span>
-                  )}
-                </Link>
-              );
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{ color: isActive ? undefined : '#374151' }}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-base font-semibold transition-all ${
+                      isActive
+                        ? "bg-gradient-to-r from-teal-600 to-teal-700 text-white shadow-lg"
+                        : "text-gray-700 hover:bg-teal-50"
+                    }`}
+                  >
+                    <span style={{ color: isActive ? '#fff' : '#374151' }} className="text-lg">{link.icon}</span>
+                    <span style={{ color: isActive ? '#fff' : '#374151' }}>{link.label}</span>
+                    {link.isBlinking && (
+                      <span className="blinking-red-dot"></span>
+                    )}
+                  </Link>
+                );
             })}
             {!userData && !firebaseUser && (
               <div className="pt-2 space-y-2">
@@ -197,6 +211,7 @@ export default function Header() {
                     router.push("/login");
                     setMobileMenuOpen(false);
                   }}
+                  className="text-gray-700"
                 >
                   {t("login")}
                 </Button>
@@ -214,11 +229,39 @@ export default function Header() {
               </div>
             )}
             {(userData || firebaseUser) && (
-              <div className="pt-2">
+              <div className="pt-2 space-y-2">
+                <Button
+                  block
+                  icon={<UserOutlined />}
+                  onClick={() => {
+                    router.push("/profile");
+                    setMobileMenuOpen(false);
+                  }}
+                  className="text-gray-700"
+                >
+                  {t("profile")}
+                </Button>
+                {userData && (userData.role === "admin" || userData.role === "curator") && (
+                  <Button
+                    block
+                    icon={<SettingOutlined />}
+                    onClick={() => {
+                      router.push("/admin");
+                      setMobileMenuOpen(false);
+                    }}
+                    className="text-gray-700"
+                  >
+                    {t("admin")}
+                  </Button>
+                )}
                 <Button 
                   block
                   icon={<LogoutOutlined />}
-                  onClick={handleLogout}
+                  onClick={() => {
+                    handleLogout();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="text-gray-700"
                 >
                   {t("logout")}
                 </Button>

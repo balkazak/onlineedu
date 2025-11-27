@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
-import { Card, Row, Col, Button, Spin, Empty, Tag, message } from "antd";
+import { Card, Row, Col, Button, Empty, Tag, message } from "antd";
 import { FileTextOutlined, ClockCircleOutlined, LockOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/contexts/UserContext";
@@ -9,13 +9,14 @@ import { getAllTests } from "@/lib/api";
 import { Test } from "@/lib/types";
 import Header from "@/components/Header";
 import { Layout } from "antd";
-import Loader from "@/components/Loader";
+import { CardSkeletonGrid } from "@/components/CardSkeleton";
 
-const { Content, Footer } = Layout;
+const { Content } = Layout;
 
 export default function TestsPage() {
   const [tests, setTests] = useState<Test[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
   const router = useRouter();
   const { userData } = useUser();
 
@@ -24,10 +25,24 @@ export default function TestsPage() {
   }, []);
 
   const loadTests = async () => {
+    // Try to load from localStorage first
+    const cached = localStorage.getItem("tests_cache");
+    if (cached) {
+      try {
+        setTests(JSON.parse(cached));
+        setInitialLoad(false);
+      } catch (e) {
+        console.error("Cache parse error:", e);
+      }
+    }
+
+    // Load fresh data in background
     setLoading(true);
     const allTests = await getAllTests();
     setTests(allTests);
+    localStorage.setItem("tests_cache", JSON.stringify(allTests));
     setLoading(false);
+    setInitialLoad(false);
   };
 
   const isTestAccessible = useCallback((test: Test) => {
@@ -54,11 +69,26 @@ export default function TestsPage() {
     return `${mins} мин`;
   }, []);
 
-  if (loading) {
+  if (initialLoad && tests.length === 0) {
     return (
       <Layout className="min-h-screen bg-gray-50">
         <Header />
-        <Loader />
+        <Content>
+          <div className="relative bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800 text-white py-16 overflow-hidden">
+            <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px]" />
+            <div className="relative max-w-7xl mx-auto px-4 text-center">
+              <h1 className="text-5xl md:text-6xl font-bold mb-4 leading-tight">
+                Тесты
+              </h1>
+              <p className="text-xl md:text-2xl text-teal-100 max-w-2xl mx-auto">
+                Проверьте свои знания, пройдя тесты
+              </p>
+            </div>
+          </div>
+          <div className="max-w-7xl mx-auto px-4 py-16">
+            <CardSkeletonGrid count={6} />
+          </div>
+        </Content>
       </Layout>
     );
   }
@@ -80,7 +110,9 @@ export default function TestsPage() {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 py-16">
-          {tests.length === 0 ? (
+          {initialLoad && tests.length === 0 ? (
+            <CardSkeletonGrid count={6} />
+          ) : tests.length === 0 ? (
             <Empty 
               description="Тесты пока не добавлены" 
               className="py-20"
@@ -94,7 +126,7 @@ export default function TestsPage() {
                     <Card
                       hoverable
                       className="h-full shadow-md hover:shadow-xl rounded-xl overflow-hidden border-0 transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between"
-                      bodyStyle={{ padding: "18px 16px 8px 16px", minHeight: 140 }}
+                      styles={{ body: { padding: "18px 16px 8px 16px", minHeight: 140 } }}
                       actions={[
                         <Button
                           key="action"

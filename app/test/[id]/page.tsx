@@ -170,7 +170,7 @@ export default function TestPage() {
   return (
     <Layout className="min-h-screen bg-gray-50">
       <Header />
-      <Content className="max-w-5xl mx-auto px-4 py-8">
+      <Content className="max-w-5xl mx-auto px-4 py-8 space-y-6">
         <Button
           icon={<ArrowLeftOutlined />}
           onClick={() => router.push("/tests")}
@@ -179,7 +179,7 @@ export default function TestPage() {
           Назад к тестам
         </Button>
 
-        <Card className="mb-6 shadow-xl border-0 rounded-2xl">
+        <Card className="mb-8 shadow-xl border-0 rounded-2xl p-6">
           <div className="flex items-start justify-between mb-4 gap-4">
             <div className="flex-1">
               <h1 className="text-4xl font-bold mb-3 text-gray-900">
@@ -228,33 +228,50 @@ export default function TestPage() {
         </Card>
 
         {!submitted ? (
-          <div className="space-y-6">
+          <div className="space-y-8">
             {test.questions.map((question, index) => (
-              <Card key={index} className="shadow-md border-0 rounded-xl">
+              <Card key={index} className="shadow-md border-0 rounded-xl p-6 mb-8">
                 <h3 className="text-lg font-semibold mb-4 text-gray-900">
                   {index + 1}. {question.q}
                 </h3>
+                {question.qImage && (
+                  <div className="mb-4">
+                    <img
+                      src={question.qImage}
+                      alt={`question-${index}-image`}
+                      className="w-full max-h-64 object-contain rounded-md"
+                      loading="lazy"
+                    />
+                  </div>
+                )}
                 <Radio.Group
                   onChange={(e) => handleAnswerChange(index, e.target.value)}
                   value={answers[index]}
-                  className="w-full flex flex-col gap-2"
+                  className="w-full flex flex-col gap-4"
                   disabled={timeLeft <= 0}
                   optionType="button"
                   buttonStyle="solid"
                 >
-                  {question.options.map((option, optIndex) => (
+                  {question.options.map((option: any, optIndex: number) => (
                     <Radio.Button 
                       key={optIndex} 
-                      value={option} 
-                      className="block w-full text-base border border-gray-300 rounded-lg py-3 hover:bg-teal-50 font-medium transition-all"
+                      value={option.label} 
+                      className="block w-full text-base border border-gray-300 rounded-lg py-3 hover:bg-teal-50 font-medium transition-all mb-3"
                     >
-                      {option}
+                      <div className="flex items-center gap-3">
+                        {option.image && (
+                          <img src={option.image} alt={`opt-${index}-${optIndex}`} className="w-20 h-20 object-contain rounded-md" loading="lazy" />
+                        )}
+                        <div className="flex-1 text-left">
+                          {option.text || option.label}
+                        </div>
+                      </div>
                     </Radio.Button>
                   ))}
                 </Radio.Group>
               </Card>
             ))}
-            <Card className="shadow-lg border-0 rounded-xl">
+            <Card className="shadow-lg border-0 rounded-xl p-6 mb-8">
               <Button
                 type="primary"
                 size="large"
@@ -268,7 +285,7 @@ export default function TestPage() {
             </Card>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-8">
             {test.questions.map((question, index) => {
               const userAnswer = answers[index];
               const isCorrect = userAnswer === question.answer;
@@ -276,7 +293,7 @@ export default function TestPage() {
               return (
                 <Card
                   key={index}
-                  className={`shadow-md ${
+                  className={`shadow-md p-6 mb-6 ${
                     isCorrect ? "border-green-500" : "border-red-500"
                   }`}
                 >
@@ -290,19 +307,24 @@ export default function TestPage() {
                       <CloseCircleOutlined className="text-red-500 text-2xl" />
                     )}
                   </div>
-                  <div className="space-y-2">
-                    {question.options.map((option, optIndex) => {
-                      let className = "p-2 rounded";
-                      if (option === question.answer) {
+                  <div className="space-y-4">
+                    {question.options.map((option: any, optIndex: number) => {
+                      let className = "p-2 rounded flex items-center gap-3";
+                      if (option.label === question.answer) {
                         className += " bg-green-100 text-green-800 font-semibold";
-                      } else if (option === userAnswer && !isCorrect) {
+                      } else if (option.label === userAnswer && !isCorrect) {
                         className += " bg-red-100 text-red-800";
                       }
                       return (
                         <div key={optIndex} className={className}>
-                          {option}
-                          {option === question.answer && " ✓ Правильный ответ"}
-                          {option === userAnswer && !isCorrect && " ✗ Ваш ответ"}
+                          {option.image && (
+                            <img src={option.image} alt={`opt-result-${index}-${optIndex}`} className="w-20 h-20 object-contain rounded-md" loading="lazy" />
+                          )}
+                          <div className="flex-1">
+                            {option.text || option.label}
+                            {option.label === question.answer && " ✓ Правильный ответ"}
+                            {option.label === userAnswer && !isCorrect && " ✗ Ваш ответ"}
+                          </div>
                         </div>
                       );
                     })}
@@ -310,7 +332,7 @@ export default function TestPage() {
                 </Card>
               );
             })}
-            <Card>
+            <Card className="p-6">
               <Result
                 status={score >= 70 ? "success" : score >= 50 ? "warning" : "error"}
                 title={`Результат: ${score}%`}

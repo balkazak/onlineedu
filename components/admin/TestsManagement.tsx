@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Table, Button, Modal, Form, Input, message, Popconfirm, Space, InputNumber, Select, Tag, Radio } from "antd";
-import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { Table, Button, Modal, Form, Input, message, Popconfirm, Space, InputNumber, Select, Tag, Radio, Upload } from "antd";
+import { PlusOutlined, EditOutlined, DeleteOutlined, UploadOutlined } from "@ant-design/icons";
 import { Test, TestQuestion } from "@/lib/types";
-import { getAllTests, createTest, updateTest, deleteTest, getAllUsers } from "@/lib/api";
+import { getAllTests, createTest, updateTest, deleteTest, getAllUsers, uploadImage } from "@/lib/api";
 
 const { Option } = Select;
 
@@ -35,8 +35,14 @@ export default function TestsManagement() {
     form.setFieldsValue({
       questions: [{
         q: "",
-        options: ["a", "b", "c", "d"],
-        answer: "a"
+        qImage: "",
+        options: [
+          { label: 'a', text: '' },
+          { label: 'b', text: '' },
+          { label: 'c', text: '' },
+          { label: 'd', text: '' }
+        ],
+        answer: 'a'
       }],
       timeLimit: 30,
       allowedUsers: []
@@ -45,8 +51,37 @@ export default function TestsManagement() {
   };
 
   const handleEdit = (test: Test) => {
+    // transform test structure to form-friendly shape (support legacy options as strings)
     setEditingTest(test);
-    form.setFieldsValue(test);
+    const questions = (test.questions || []).map((q, qi) => {
+      const options = (q.options || []).map((opt: any, idx: number) => {
+        if (typeof opt === 'string') {
+          return { label: String.fromCharCode(97 + idx), text: opt, image: undefined };
+        }
+        return { label: opt.label || String.fromCharCode(97 + idx), text: opt.text || (opt || '').toString(), image: opt.image };
+      });
+      // ensure at least 4 options
+      for (let i = options.length; i < 4; i++) options.push({ label: String.fromCharCode(97 + i), text: '', image: undefined });
+
+      // determine answer label: if answer matches option.label use it, else if matches option.text find index
+      let answerLabel = q.answer || 'a';
+      if (!options.find(o => o.label === answerLabel)) {
+        const foundIdx = options.findIndex(o => o.text === q.answer);
+        answerLabel = foundIdx === -1 ? 'a' : options[foundIdx].label;
+      }
+
+      const qImageFile = (q as any).qImage ? [{ uid: '-1', name: 'image.jpg', status: 'done', url: (q as any).qImage }] : [];
+      const optsWithFiles = options.map((opt: any, idx: number) => {
+        if (opt.image) {
+          return { ...opt, imageFile: [{ uid: `-${idx}`, name: 'image.jpg', status: 'done', url: opt.image }] };
+        }
+        return opt;
+      });
+
+      return { q: q.q || '', qImage: (q as any).qImage || '', qImageFile, options: optsWithFiles, answer: answerLabel };
+    });
+
+    form.setFieldsValue({ ...test, questions });
     setModalVisible(true);
   };
 
@@ -61,15 +96,54 @@ export default function TestsManagement() {
   };
 
   const handleSubmit = async (values: any) => {
-    const questions = values.questions
-      .map((q: any) => ({
-        q: q.q,
-        options: Array.isArray(q.options) ? q.options.filter((opt: string) => opt && opt.trim()) : [],
-        answer: q.answer,
-      }))
-      .filter((q: TestQuestion) =>
-        q.q && q.options.length >= 2 && q.answer
-      );
+    const processedQuestions: TestQuestion[] = await Promise.all((values.questions || []).map(async (q: any, qi: number) => {
+      const question: any = { q: q.q || '', options: [], answer: q.answer };
+
+      // handle question image upload or URL
+      if (q.qImageFile && Array.isArray(q.qImageFile) && q.qImageFile.length > 0) {
+        const fileItem = q.qImageFile[0];
+        if (fileItem.originFileObj) {
+          const file = fileItem.originFileObj;
+          if (file instanceof File) {
+            const imagePath = `tests/questions/${Date.now()}-${qi}-q.jpg`;
+            const imageUrl = await uploadImage(file, imagePath);
+            if (imageUrl) question.qImage = imageUrl;
+          }
+        } else if (fileItem.url) {
+          question.qImage = fileItem.url;
+        }
+      } else if (q.qImage) {
+        question.qImage = q.qImage;
+      }
+
+      if (q.options && Array.isArray(q.options)) {
+        question.options = await Promise.all(q.options.map(async (opt: any, oi: number) => {
+          const option: any = { label: opt.label || String.fromCharCode(97 + oi), text: opt.text || '' };
+
+          if (opt.imageFile && Array.isArray(opt.imageFile) && opt.imageFile.length > 0) {
+            const fileItem = opt.imageFile[0];
+            if (fileItem.originFileObj) {
+              const file = fileItem.originFileObj;
+              if (file instanceof File) {
+                const imagePath = `tests/questions/${Date.now()}-${qi}-options-${oi}.jpg`;
+                const imageUrl = await uploadImage(file, imagePath);
+                if (imageUrl) option.image = imageUrl;
+              }
+            } else if (fileItem.url) {
+              option.image = fileItem.url;
+            }
+          } else if (opt.image) {
+            option.image = opt.image;
+          }
+
+          return option;
+        }));
+      }
+
+      return question as TestQuestion;
+    }));
+
+    const questions = (processedQuestions || []).filter((q: TestQuestion) => q.q && q.options && q.options.length >= 2 && q.answer);
 
     if (questions.length === 0) {
       message.error("Добавьте хотя бы один вопрос с минимум 2 вариантами ответа");
@@ -268,6 +342,45 @@ export default function TestsManagement() {
                     >
                       <Input placeholder="Текст вопроса" />
                     </Form.Item>
+                    <Form.Item
+                      {...restField}
+                      name={[name, "qImageFile"]}
+                      label="Картинка к вопросу"
+                      getValueFromEvent={(e) => {
+                        if (Array.isArray(e)) return e;
+                        return e?.fileList;
+                      }}
+                      valuePropName="fileList"
+                    >
+                      <Upload
+                        beforeUpload={(file) => {
+                          const isImage = file.type && file.type.startsWith('image/');
+                          if (!isImage) {
+                            message.error('Можно загружать только изображения!');
+                            return Upload.LIST_IGNORE;
+                          }
+                          return false;
+                        }}
+                        listType="picture"
+                        maxCount={1}
+                        defaultFileList={(() => {
+                          const qImage = form.getFieldValue(['questions', name, 'qImage']);
+                          if (qImage) {
+                            return [{ uid: '-1', name: 'image.jpg', status: 'done', url: qImage }];
+                          }
+                          return [];
+                        })()}
+                      >
+                        <Button icon={<UploadOutlined />}>Загрузить картинку</Button>
+                      </Upload>
+                    </Form.Item>
+                    <Form.Item
+                      {...restField}
+                      name={[name, 'qImage']}
+                      hidden
+                    >
+                      <Input type="hidden" />
+                    </Form.Item>
                     <Form.List name={[name, "options"]}>
                       {(optionFields, { add: addOption, remove: removeOption }) => {
                         // auto-add 4 by default (for new)
@@ -277,36 +390,81 @@ export default function TestsManagement() {
                         return (
                           <>
                             {optionFields.map((fld, idx) => (
-                              <div key={fld.key} className="flex items-center gap-2">
-                                <Form.Item
-                                  {...fld}
-                                  name={fld.name}
-                                  label={<span className="font-semibold">{String.fromCharCode(97 + idx)})</span>}
-                                  rules={[{ required: true, message: "Вариант обязателен" }]}
-                                  className="flex-1"
-                                >
-                                  <Input placeholder={`Вариант ${String.fromCharCode(97 + idx)}`} />
-                                </Form.Item>
-                                {/* Удалять только если вариантов больше 4 и это не первые четыре */}
-                                {optionFields.length > 4 && idx >= 4 && (
-                                  <Button danger size="small" onClick={() => removeOption(fld.name)}>
-                                    Удалить
-                                  </Button>
-                                )}
+                              <div key={fld.key} className="mb-2">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-8">
+                                    <span className="font-semibold">{String.fromCharCode(97 + idx)})</span>
+                                  </div>
+                                  <div className="flex-1">
+                                    <Form.Item
+                                      {...fld}
+                                      name={[fld.name, "text"]}
+                                      rules={[{ required: true, message: "Вариант обязателен" }]}
+                                      className="mb-1"
+                                    >
+                                      <Input placeholder={`Вариант ${String.fromCharCode(97 + idx)}`} />
+                                    </Form.Item>
+                                    <Form.Item
+                                      {...fld}
+                                      name={[fld.name, "imageFile"]}
+                                      getValueFromEvent={(e) => {
+                                        if (Array.isArray(e)) return e;
+                                        return e?.fileList;
+                                      }}
+                                      valuePropName="fileList"
+                                      className="mb-1"
+                                    >
+                                      <Upload
+                                        beforeUpload={(file) => {
+                                          const isImage = file.type && file.type.startsWith('image/');
+                                          if (!isImage) {
+                                            message.error('Можно загружать только изображения!');
+                                            return Upload.LIST_IGNORE;
+                                          }
+                                          return false;
+                                        }}
+                                        listType="picture"
+                                        maxCount={1}
+                                        defaultFileList={(() => {
+                                          const optImage = form.getFieldValue(['questions', name, 'options', fld.name, 'image']);
+                                          if (optImage) {
+                                            return [{ uid: `-${fld.name}`, name: 'image.jpg', status: 'done', url: optImage }];
+                                          }
+                                          return [];
+                                        })()}
+                                      >
+                                        <Button size="small" icon={<UploadOutlined />}>Картинка</Button>
+                                      </Upload>
+                                    </Form.Item>
+                                    <Form.Item
+                                      {...fld}
+                                      name={[fld.name, 'image']}
+                                      hidden
+                                    >
+                                      <Input type="hidden" />
+                                    </Form.Item>
+                                  </div>
+                                  {optionFields.length > 4 && idx >= 4 && (
+                                    <Button danger size="small" onClick={() => removeOption(fld.name)}>
+                                      Удалить
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
                             ))}
-                            {/* Выберем правильный через radio */}
+
                             <Form.Item label="Выберите правильный вариант" shouldUpdate>
                               {() => {
-                                const options = optionFields.map(fld=> form.getFieldValue(["questions", name, "options", fld.name]));
+                                const options = optionFields.map(fld => form.getFieldValue(["questions", name, "options", fld.name]) || { label: String.fromCharCode(97 + 0) });
                                 const answer = form.getFieldValue(["questions", name, "answer"]);
-                                const current = options.findIndex(o => o === answer);
+                                const current = options.findIndex((o: any) => o && o.label === answer);
                                 return (
                                   <Radio.Group
                                     value={current === -1 ? 0 : current}
                                     onChange={e => {
                                       const idx = e.target.value;
-                                      form.setFieldValue(["questions", name, "answer"], options[idx]);
+                                      const opt = options[idx];
+                                      form.setFieldValue(["questions", name, "answer"], opt?.label || String.fromCharCode(97 + idx));
                                     }}
                                   >
                                     {options.map((_, idx) => (
@@ -316,6 +474,7 @@ export default function TestsManagement() {
                                 );
                               }}
                             </Form.Item>
+
                             {optionFields.length < 8 && (
                               <Form.Item>
                                 <Button

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback } from "react";
-import { Card, Row, Col, Button, Spin, Empty, Tag, message } from "antd";
+import { Card, Row, Col, Button, Empty, Tag, message } from "antd";
 import { PlayCircleOutlined, LockOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import { useUser } from "@/contexts/UserContext";
@@ -9,13 +9,14 @@ import { getAllCourses } from "@/lib/api";
 import { Course } from "@/lib/types";
 import Header from "@/components/Header";
 import { Layout } from "antd";
-import Loader from "@/components/Loader";
+import { CardSkeletonGrid } from "@/components/CardSkeleton";
 
-const { Content, Footer } = Layout;
+const { Content } = Layout;
 
 export default function CoursesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
   const router = useRouter();
   const { userData } = useUser();
 
@@ -24,10 +25,24 @@ export default function CoursesPage() {
   }, []);
 
   const loadCourses = async () => {
+    // Try to load from localStorage first
+    const cached = localStorage.getItem("courses_cache");
+    if (cached) {
+      try {
+        setCourses(JSON.parse(cached));
+        setInitialLoad(false);
+      } catch (e) {
+        console.error("Cache parse error:", e);
+      }
+    }
+
+    // Load fresh data in background
     setLoading(true);
     const allCourses = await getAllCourses();
     setCourses(allCourses);
+    localStorage.setItem("courses_cache", JSON.stringify(allCourses));
     setLoading(false);
+    setInitialLoad(false);
   };
 
   const isCourseAccessible = useCallback((courseId: string) => {
@@ -54,11 +69,26 @@ export default function CoursesPage() {
     return null;
   }, [getYouTubeVideoId]);
 
-  if (loading) {
+  if (initialLoad && courses.length === 0) {
     return (
       <Layout className="min-h-screen bg-gray-50">
         <Header />
-        <Loader />
+        <Content>
+          <div className="relative bg-gradient-to-br from-teal-600 via-teal-700 to-teal-800 text-white py-16 overflow-hidden">
+            <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px]" />
+            <div className="relative max-w-7xl mx-auto px-4 text-center">
+              <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
+                Курсы
+              </h1>
+              <p className="text-xl md:text-2xl mb-10 text-teal-100 max-w-2xl mx-auto">
+                Выберите курс и начните обучение
+              </p>
+            </div>
+          </div>
+          <div className="max-w-7xl mx-auto px-4 py-16">
+            <CardSkeletonGrid count={6} />
+          </div>
+        </Content>
       </Layout>
     );
   }
@@ -80,7 +110,9 @@ export default function CoursesPage() {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 py-16">
-          {courses.length === 0 ? (
+          {initialLoad && courses.length === 0 ? (
+            <CardSkeletonGrid count={6} />
+          ) : courses.length === 0 ? (
             <Empty 
               description="Курсы пока не добавлены" 
               className="py-20"
@@ -102,6 +134,7 @@ export default function CoursesPage() {
                               alt={course.title}
                               src={thumbnail}
                               loading="lazy"
+                              decoding="async"
                               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
@@ -121,7 +154,7 @@ export default function CoursesPage() {
                           </div>
                         )
                       }
-                      bodyStyle={{ padding: "18px 16px 8px 16px", minHeight: 120 }}
+                      styles={{ body: { padding: "18px 16px 8px 16px", minHeight: 120 } }}
                       actions={[
                         <Button
                           key="action"
