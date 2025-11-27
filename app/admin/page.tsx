@@ -19,7 +19,7 @@ export default function AdminPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && userData?.role !== "admin") {
+    if (!loading && userData?.role !== "admin" && userData?.role !== "curator") {
       router.push("/");
     }
   }, [userData, loading, router]);
@@ -53,51 +53,42 @@ export default function AdminPage() {
     );
   }
 
-  const tabItems = userData?.role === "curator"
-    ? [
-        {
-          key: "users",
-          label: (
-            <span>
-              <UserOutlined />
-              Пользователи
-            </span>
-          ),
-          children: <UsersManagement />,         
-        },
-      ]
-    : [
-        {
-          key: "courses",
-          label: (
-            <span>
-              <BookOutlined />
-              Курсы
-            </span>
-          ),
-          children: <CoursesManagement />,
-        },
-        {
-          key: "tests",
-          label: (
-            <span>
-              <FileTextOutlined />
-              Тесты
-            </span>
-          ),
-          children: <TestsManagement />,
-        },
-        {
-          key: "users",
-          label: (
-            <span>
-              <UserOutlined />
-              Пользователи
-            </span>
-          ),
-          children: <UsersManagement />,         
-        },
-      ];
+  const isCurator = userData?.role === "curator";
+  
+  const tabItems = [
+    {
+      key: "courses",
+      label: (
+        <span>
+          <BookOutlined />
+          Курсы
+        </span>
+      ),
+      children: <CoursesManagement />,
+      disabled: isCurator,
+    },
+    {
+      key: "tests",
+      label: (
+        <span>
+          <FileTextOutlined />
+          Тесты
+        </span>
+      ),
+      children: <TestsManagement />,
+      disabled: isCurator,
+    },
+    {
+      key: "users",
+      label: (
+        <span>
+          <UserOutlined />
+          Пользователи
+        </span>
+      ),
+      children: <UsersManagement />,
+    },
+  ];
 
   return (
     <Layout className="min-h-screen bg-gray-50">

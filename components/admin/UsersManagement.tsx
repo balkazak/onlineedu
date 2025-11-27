@@ -17,7 +17,9 @@ export default function UsersManagement() {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [form] = Form.useForm();
-  const { refreshUserData } = useUser();
+  const { refreshUserData, userData } = useUser();
+  
+  const isCurator = userData?.role === "curator";
 
   useEffect(() => {
     loadData();
@@ -42,12 +44,21 @@ export default function UsersManagement() {
   };
 
   const handleEdit = (user: User) => {
+    if (isCurator && user.role === "admin") {
+      message.warning("Куратор не может редактировать администраторов");
+      return;
+    }
     setEditingUser(user);
     form.setFieldsValue(user);
     setModalVisible(true);
   };
 
   const handleDelete = async (email: string) => {
+    const userToDelete = users.find(u => u.email === email);
+    if (isCurator && userToDelete?.role === "admin") {
+      message.warning("Куратор не может удалять администраторов");
+      return;
+    }
     const success = await deleteUser(email);
     if (success) {
       message.success("Пользователь удален");
@@ -58,6 +69,17 @@ export default function UsersManagement() {
   };
 
   const handleSubmit = async (values: any) => {
+    if (isCurator) {
+      if (values.role === "admin") {
+        message.warning("Куратор не может создавать или изменять роль на администратор");
+        return;
+      }
+      if (editingUser && editingUser.role === "admin") {
+        message.warning("Куратор не может редактировать администраторов");
+        return;
+      }
+    }
+    
     if (editingUser) {
       const success = await updateUser(editingUser.email, values);
       if (success) {
@@ -132,27 +154,44 @@ export default function UsersManagement() {
       title: "Действия",
       key: "actions",
       width: 150,
-      render: (_: any, record: User) => (
-        <Space>
-          <Button
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-            size="small"
-          />
-          <Popconfirm
-            title="Удалить пользователя?"
-            onConfirm={() => handleDelete(record.email)}
-            okText="Да"
-            cancelText="Нет"
-          >
+      render: (_: any, record: User) => {
+        const canEdit = !(isCurator && record.role === "admin");
+        const canDelete = !(isCurator && record.role === "admin");
+        
+        return (
+          <Space>
             <Button
-              icon={<DeleteOutlined />}
-              danger
+              icon={<EditOutlined />}
+              onClick={() => handleEdit(record)}
               size="small"
+              disabled={!canEdit}
+              title={!canEdit ? "Куратор не может редактировать администраторов" : ""}
             />
-          </Popconfirm>
-        </Space>
-      ),
+            {canDelete ? (
+              <Popconfirm
+                title="Удалить пользователя?"
+                onConfirm={() => handleDelete(record.email)}
+                okText="Да"
+                cancelText="Нет"
+              >
+                <Button
+                  icon={<DeleteOutlined />}
+                  danger
+                  size="small"
+                />
+              </Popconfirm>
+            ) : (
+              <Button
+                icon={<DeleteOutlined />}
+                danger
+                size="small"
+                disabled
+                title="Куратор не может удалять администраторов"
+              />
+            )}
+          </Space>
+        );
+      },
     },
   ];
 
@@ -229,10 +268,10 @@ export default function UsersManagement() {
             label="Роль"
             rules={[{ required: true, message: "Выберите роль" }]}
           >
-            <Select>
+            <Select disabled={isCurator && editingUser?.role === "admin"}>
               <Option value="student">Студент</Option>
               <Option value="curator">Куратор</Option>
-              <Option value="admin">Администратор</Option>
+              {!isCurator && <Option value="admin">Администратор</Option>}
             </Select>
           </Form.Item>
 

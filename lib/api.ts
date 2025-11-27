@@ -110,10 +110,14 @@ export const getCourse = async (courseId: string): Promise<Course | null> => {
 export const createCourse = async (course: Omit<Course, "id">): Promise<string | null> => {
   if (!db) return null;
   try {
-    const docRef = await addDoc(collection(db, "courses"), {
-      ...course,
-      createdAt: new Date()
-    });
+    const cleanCourse = Object.fromEntries(
+      Object.entries({
+        ...course,
+        createdAt: new Date()
+      }).filter(([_, value]) => value !== undefined)
+    ) as any;
+    
+    const docRef = await addDoc(collection(db, "courses"), cleanCourse);
     invalidateCache("courses");
     return docRef.id;
   } catch (error) {
@@ -125,7 +129,11 @@ export const createCourse = async (course: Omit<Course, "id">): Promise<string |
 export const updateCourse = async (courseId: string, course: Partial<Course>): Promise<boolean> => {
   if (!db) return false;
   try {
-    await updateDoc(doc(db, "courses", courseId), course);
+    const cleanCourse = Object.fromEntries(
+      Object.entries(course).filter(([_, value]) => value !== undefined)
+    ) as any;
+    
+    await updateDoc(doc(db, "courses", courseId), cleanCourse);
     invalidateCache("courses");
     return true;
   } catch (error) {

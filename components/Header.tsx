@@ -61,7 +61,7 @@ export default function Header() {
       { href: "/nzm-calculator", label: t("nzmCalculator"), icon: <CalculatorOutlined /> },
       { href: "/pricing", label: t("pricing"), icon: <DollarOutlined /> },
     ];
-    if (userData?.role === "admin") {
+    if (userData?.role === "admin" || userData?.role === "curator") {
       links.push({ href: "/admin", label: t("admin"), icon: <SettingOutlined /> });
     }
     return links;

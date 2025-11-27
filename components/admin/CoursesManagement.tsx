@@ -114,16 +114,16 @@ export default function CoursesManagement() {
     ).map(async (l: any, index: number) => {
       const lesson: any = {
         id: l.id || `${Date.now()}-${index}`,
-        title: l.title,
-        youtubeLink: l.youtubeLink,
-        description: l.description,
-        solutionVideoLink: l.solutionVideoLink
+        title: l.title || "",
+        youtubeLink: l.youtubeLink || "",
+        description: l.description || "",
+        solutionVideoLink: l.solutionVideoLink || ""
       };
 
       if (l.test && l.test.questions && l.test.questions.length > 0) {
         const processedQuestions = await Promise.all(l.test.questions.map(async (q: any) => {
           const question: any = {
-            q: q.q,
+            q: q.q || "",
             options: [],
             answer: q.answer || ""
           };
@@ -186,8 +186,8 @@ export default function CoursesManagement() {
     }
 
     const courseData = {
-      title: values.title,
-      description: values.description,
+      title: values.title || "",
+      description: values.description || "",
       lessons
     };
 
