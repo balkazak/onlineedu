@@ -77,41 +77,65 @@ export default function Home() {
       <Header />
       <Content className="relative">
         <div className="max-w-7xl mx-auto px-4 py-8">
-          <Carousel 
-            autoplay 
-            effect="fade" 
-            className="w-full rounded-2xl overflow-hidden shadow-2xl border-4 border-white"
-            dots={{ className: "custom-dots" }}
-            arrows={true}
-          >
-            <div>
-              <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] bg-gray-100">
-                <img 
-                  src="/banner1.png" 
-                  alt="Banner 1" 
-                  className="w-full h-full object-contain"
-                />
+          <div className="relative">
+            {/* Overlay images positioned above the carousel */}
+            <img src="/dostyk.jpg" alt="dostyk" className="pointer-events-none absolute top-4 left-4 w-20 h-20 md:w-28 md:h-28 object-contain z-50" />
+            <img src="/newlogo.png" alt="logo" className="pointer-events-none absolute top-4 right-4 w-20 h-20 md:w-28 md:h-28 object-contain z-50" />
+
+            <Carousel 
+              autoplay 
+              effect="fade" 
+              className="w-full rounded-2xl overflow-hidden shadow-2xl border-4 border-white"
+              dots={{ className: "custom-dots" }}
+              arrows={true}
+            >
+              <div>
+                <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] bg-gray-100">
+                  <img 
+                    src="/bannernew1.png" 
+                    alt="Banner 1" 
+                    className="w-full h-full object-contain"
+                  />
+                </div>
               </div>
-            </div>
-            <div>
-              <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] bg-gray-100">
-                <img 
-                  src="/banner2.webp" 
-                  alt="Banner 2" 
-                  className="w-full h-full object-contain"
-                />
+              <div>
+                <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] bg-gray-100">
+                  <img 
+                    src="/bannernew2.jpg" 
+                    alt="Banner 2" 
+                    className="w-full h-full object-contain"
+                  />
+                </div>
               </div>
-            </div>
-            <div>
-              <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] bg-gray-100">
-                <img 
-                  src="/banner3.jpg" 
-                  alt="Banner 3" 
-                  className="w-full h-full object-contain"
-                />
+              <div>
+                <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] bg-gray-100">
+                  <img 
+                    src="/banner3.jpg" 
+                    alt="Banner 3" 
+                    className="w-full h-full object-contain"
+                  />
+                </div>
               </div>
-            </div>
-          </Carousel>
+              <div>
+                <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] bg-gray-100">
+                  <img 
+                    src="/banner2.webp" 
+                    alt="Banner 3" 
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              </div>
+              <div>
+                <div className="relative w-full h-[400px] md:h-[500px] lg:h-[600px] bg-gray-100">
+                  <img 
+                    src="/banner4.jpg" 
+                    alt="Banner 3" 
+                    className="w-full h-full object-contain"
+                  />
+                </div>
+              </div>
+            </Carousel>
+          </div>
         </div>
         <div className="relative min-h-screen bg-gradient-to-b from-teal-500 via-teal-600 to-teal-700 overflow-hidden">
           <div className="absolute inset-0">

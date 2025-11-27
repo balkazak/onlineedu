@@ -98,7 +98,7 @@ export default function Header() {
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-8">
             <Link href="/" className="flex items-center space-x-3 group">
-              <img src="/logo2.png" alt="Logo" className="w-25 h-15 rounded bg-white" />
+              <img src="/newlogo.png" alt="NIS-BIL.online" className="w-20 h-20 rounded" />
             </Link>
 
             <nav className="hidden md:flex md:space-x-2">
@@ -151,21 +151,14 @@ export default function Header() {
               </Dropdown>
             ) : (
                 <Space className="hidden sm:flex" size="middle">
-                <Button 
-                  type="text" 
-                  onClick={() => router.push("/login")}
-                  className="text-gray-700 hover:text-teal-600 font-medium"
-                >
-                  {t("login")}
-                </Button>
-                <Button 
-                  type="primary" 
-                  onClick={() => router.push("/login")}
-                  className="bg-gradient-to-r from-teal-600 to-teal-700 border-0 hover:from-teal-700 hover:to-teal-800 shadow-md font-semibold"
-                >
-                  {t("register")}
-                </Button>
-              </Space>
+                    <Button 
+                      type="text" 
+                      onClick={() => router.push("/login")}
+                      className="text-gray-700 hover:text-teal-600 font-medium"
+                    >
+                      {t("login")}
+                    </Button>
+                  </Space>
             )}
 
             <button
@@ -214,17 +207,6 @@ export default function Header() {
                   className="text-gray-700"
                 >
                   {t("login")}
-                </Button>
-                <Button 
-                  type="primary" 
-                  block
-                  onClick={() => {
-                    router.push("/login");
-                    setMobileMenuOpen(false);
-                  }}
-                  className="bg-gradient-to-r from-teal-600 to-teal-700 border-0 shadow-md font-semibold"
-                >
-                  {t("register")}
                 </Button>
               </div>
             )}

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "antd/dist/reset.css";
 import "./globals.css";
+import { ConfigProvider } from "antd";
 import { UserProvider } from "@/contexts/UserContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import Footer from "@/components/Footer";
@@ -33,16 +34,24 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <LanguageProvider>
-          <UserProvider>
-            <div className="flex flex-col min-h-screen">
-              <div className="flex-grow">{children}</div>
-              <Footer />
-            </div>
-            <FloatingWhatsapp />
-            <ScrollToTop />
-          </UserProvider>
-        </LanguageProvider>
+        <ConfigProvider
+          theme={{
+            token: {
+              colorPrimary: "#14b8a6"
+            }
+          }}
+        >
+          <LanguageProvider>
+            <UserProvider>
+              <div className="flex flex-col min-h-screen">
+                <div className="flex-grow">{children}</div>
+                <Footer />
+              </div>
+              <FloatingWhatsapp />
+              <ScrollToTop />
+            </UserProvider>
+          </LanguageProvider>
+        </ConfigProvider>
       </body>
     </html>
   );

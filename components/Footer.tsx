@@ -13,10 +13,10 @@ export default function Footer() {
         {/* Лого + подпись */}
         <div className="min-w-[170px] mb-6 md:mb-0 flex-shrink-0">
           <Link href="/" className="flex items-center gap-2 mb-5">
-            <img src="/logo2.png" alt="BIL-NIS.online" className="w-10 h-10 rounded bg-white p-1" />
-            <span className="text-lg font-bold text-gray-100 tracking-wide">BIL-NIS<span className="text-green-400">.online</span></span>
+            <img src="/newlogo.png" alt="NIS-BIL.online" className="w-20 h-20 rounded bg-white p-1" />
+            <span className="text-lg font-bold text-gray-100 tracking-wide">NIS-BIL<span className="text-green-400">.online</span></span>
           </Link>
-          <div className="text-sm text-gray-400">BIL-NIS<span className="text-green-400">.online</span> — онлайн‑платформа образования</div>
+          <div className="text-sm text-gray-400">NIS-BIL<span className="text-green-400">.online</span> — онлайн‑платформа образования</div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-10 flex-1">
           <div>
