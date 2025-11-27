@@ -16,6 +16,7 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['antd', '@ant-design/icons'],
   },
+  turbopack: {},  // Это пустая конфигурация для Turbopack
 };
 
 export default nextConfig;
