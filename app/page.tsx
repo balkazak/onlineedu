@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card, Row, Col, Button, Statistic, Tag, Radio, Space, Carousel } from "antd";
 import { 
   BookOutlined, 
@@ -46,8 +46,36 @@ export default function Home() {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [score, setScore] = useState(0);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const isKz = language === "kz";
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (videoRef.current) {
+          if (entry.isIntersecting) {
+            videoRef.current.play().catch(() => {
+              // Fallback if autoplay fails
+            });
+          } else {
+            videoRef.current.pause();
+          }
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    if (videoRef.current) {
+      observer.observe(videoRef.current);
+    }
+
+    return () => {
+      if (videoRef.current) {
+        observer.unobserve(videoRef.current);
+      }
+    };
+  }, []);
 
   const handleAnswer = (answer: string) => {
     setSelectedAnswer(answer);
@@ -267,6 +295,19 @@ export default function Home() {
                     </div>
                   </Col>
                 </Row>
+              </div>
+
+              <div className="bg-white/95 backdrop-blur-sm shadow-2xl border-0 rounded-3xl p-8 md:p-12 mb-20 overflow-hidden">
+                <div className="relative pb-[56.25%] h-0 overflow-hidden rounded-xl shadow-2xl">
+                  <video
+                    ref={videoRef}
+                    className="absolute top-0 left-0 w-full h-full object-cover"
+                    loop
+                    playsInline
+                  >
+                    <source src="/promo.webm" type="video/webm" />
+                  </video>
+                </div>
               </div>
 
               <div className="bg-white/95 backdrop-blur-sm shadow-2xl border-0 rounded-3xl p-8 md:p-12">

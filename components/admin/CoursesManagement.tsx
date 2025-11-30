@@ -32,7 +32,7 @@ export default function CoursesManagement() {
       lessons: [{ 
         id: Date.now().toString(), 
         title: "", 
-        youtubeLink: "", 
+        youtubeLinks: [""], 
         description: "", 
         solutionVideoLink: "",
         test: {
@@ -49,6 +49,10 @@ export default function CoursesManagement() {
       ? course.lessons.map(lesson => {
           const lessonData: any = {
             ...lesson,
+            // Convert legacy youtubeLink to youtubeLinks array
+            youtubeLinks: lesson.youtubeLink 
+              ? [lesson.youtubeLink] 
+              : (lesson.youtubeLinks || [""]),
             test: lesson.test || { questions: [] }
           };
           
@@ -86,7 +90,7 @@ export default function CoursesManagement() {
       : [{ 
           id: Date.now().toString(), 
           title: "", 
-          youtubeLink: "", 
+          youtubeLinks: [""], 
           description: "", 
           solutionVideoLink: "",
           test: { questions: [] }
@@ -110,12 +114,13 @@ export default function CoursesManagement() {
 
   const handleSubmit = async (values: any) => {
     const lessons = await Promise.all((values.lessons || []).filter((l: any) => 
-      l.title && l.youtubeLink
+      l.title && l.youtubeLinks && l.youtubeLinks.length > 0 && l.youtubeLinks[0]
     ).map(async (l: any, index: number) => {
       const lesson: any = {
         id: l.id || `${Date.now()}-${index}`,
         title: l.title || "",
-        youtubeLink: l.youtubeLink || "",
+        youtubeLink: l.youtubeLinks[0] || "",
+        youtubeLinks: l.youtubeLinks.filter((link: string) => link),
         description: l.description || "",
         solutionVideoLink: l.solutionVideoLink || ""
       };
@@ -330,17 +335,57 @@ export default function CoursesManagement() {
                     >
                       <Input placeholder="Например: Логарифмы" />
                     </Form.Item>
-                    <Form.Item
-                      {...restField}
-                      name={[name, "youtubeLink"]}
-                      label="YouTube ссылка (видео урока)"
-                      rules={[
-                        { required: true, message: "Введите ссылку на YouTube" },
-                        { type: "url", message: "Введите корректную ссылку" },
-                      ]}
-                    >
-                      <Input placeholder="https://youtu.be/X17EgOFRLqI" />
-                    </Form.Item>
+                    
+                    <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <div className="font-semibold mb-3 text-blue-900">YouTube видео уроков</div>
+                      <Form.Item
+                        {...restField}
+                        name={[name, "youtubeLinks"]}
+                        initialValue={[""]}
+                      >
+                        <Form.List name={[name, "youtubeLinks"]}>
+                          {(videoFields, { add: addVideo, remove: removeVideo }) => (
+                            <>
+                              {videoFields.map(({ key: vKey, name: vName, ...vRestField }) => (
+                                <div key={vKey} className="flex items-end gap-2 mb-2">
+                                  <Form.Item
+                                    {...vRestField}
+                                    name={[vName]}
+                                    rules={[
+                                      { required: true, message: "Введите ссылку на YouTube" },
+                                      { type: "url", message: "Введите корректную ссылку" },
+                                    ]}
+                                    className="flex-1 mb-0"
+                                  >
+                                    <Input placeholder="https://youtu.be/X17EgOFRLqI" />
+                                  </Form.Item>
+                                  {videoFields.length > 1 && (
+                                    <Button
+                                      type="link"
+                                      danger
+                                      onClick={() => removeVideo(vName)}
+                                      size="small"
+                                    >
+                                      Удалить
+                                    </Button>
+                                  )}
+                                </div>
+                              ))}
+                              <Button
+                                type="dashed"
+                                onClick={() => addVideo()}
+                                block
+                                size="small"
+                                className="mt-2"
+                              >
+                                + Добавить еще 1 видео
+                              </Button>
+                            </>
+                          )}
+                        </Form.List>
+                      </Form.Item>
+                    </div>
+                    
                     <Form.Item
                       {...restField}
                       name={[name, "description"]}

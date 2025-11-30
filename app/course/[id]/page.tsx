@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { Card, Button, message, Empty, Layout, Radio, Space } from "antd";
 import { ArrowLeftOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 import { useRouter, useParams } from "next/navigation";
@@ -22,9 +22,18 @@ export default function CoursePage() {
   const [testAnswers, setTestAnswers] = useState<Record<number, string>>({});
   const [testResults, setTestResults] = useState<Record<number, boolean> | null>(null);
   const [testSubmitted, setTestSubmitted] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const params = useParams();
   const { userData, loading: userLoading } = useUser();
+
+  useEffect(() => {
+    // Disable body scroll on course page
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, []);
 
   useEffect(() => {
     if (params.id) {
@@ -88,6 +97,13 @@ export default function CoursePage() {
     selectedLesson ? getYouTubeEmbedUrl(selectedLesson.youtubeLink) : null,
     [selectedLesson, getYouTubeEmbedUrl]
   );
+  
+  const allEmbedUrls = useMemo(() => {
+    if (!selectedLesson) return [];
+    const links = selectedLesson.youtubeLinks || (selectedLesson.youtubeLink ? [selectedLesson.youtubeLink] : []);
+    return links.map(link => getYouTubeEmbedUrl(link)).filter(Boolean);
+  }, [selectedLesson, getYouTubeEmbedUrl]);
+  
   const solutionEmbedUrl = useMemo(() => 
     selectedLesson?.solutionVideoLink ? getYouTubeEmbedUrl(selectedLesson.solutionVideoLink) : null,
     [selectedLesson, getYouTubeEmbedUrl]
@@ -118,20 +134,20 @@ export default function CoursePage() {
       <Header />
       <Layout>
         <Sider
-          width={320}
-          className="bg-white shadow-xl border-r border-gray-200"
+          width={380}
+          className="bg-white shadow-xl border-r border-gray-200 overflow-y-auto overflow-x-hidden"
           collapsible
           collapsed={collapsed}
           onCollapse={setCollapsed}
           trigger={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
           breakpoint="lg"
           collapsedWidth={0}
+          style={{ maxHeight: "calc(100vh - 64px)", overflowY: "auto", overflowX: "hidden" }}
         >
-          <div className="p-4 h-full flex flex-col">
+          <div className="p-4 flex flex-col">
             <h3 className="text-xl font-bold text-gray-900 mb-6 pb-4 border-b border-gray-200">{course.title}</h3>
-            <div className="flex-1 overflow-y-auto">
-              <div className="space-y-2">
-                {course.lessons.map((lesson) => (
+            <div className="space-y-2">
+              {course.lessons.map((lesson) => (
                   <div
                     key={lesson.id}
                     className={`rounded-lg border transition-all duration-200 ${
@@ -163,6 +179,10 @@ export default function CoursePage() {
                           setTestAnswers({});
                           setTestResults(null);
                           setTestSubmitted(false);
+                          // Scroll right content to top
+                          if (contentRef.current) {
+                            contentRef.current.scrollTop = 0;
+                          }
                         }}
                         >
                           Открыть урок
@@ -176,11 +196,10 @@ export default function CoursePage() {
                     </div>
                   </div>
                 ))}
-              </div>
             </div>
           </div>
         </Sider>
-        <Content className="p-6">
+        <Content className="p-6 overflow-y-auto" style={{ maxHeight: "calc(100vh - 64px)" }} ref={contentRef}>
           <Button
             icon={<ArrowLeftOutlined />}
             onClick={() => router.push("/courses")}
@@ -207,18 +226,25 @@ export default function CoursePage() {
               )}
             </div>
             
-            {embedUrl ? (
-              <div className="mb-6">
-                <h3 className="text-xl font-semibold text-gray-800 mb-3">Видео урока</h3>
-                <div className="relative pb-[56.25%] h-0 overflow-hidden rounded-xl shadow-2xl">
-                  <iframe
-                    className="absolute top-0 left-0 w-full h-full"
-                    src={embedUrl}
-                    title={selectedLesson?.title || course.title}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                </div>
+            {allEmbedUrls && allEmbedUrls.length > 0 ? (
+              <div className="mb-6 space-y-6">
+                <h3 className="text-xl font-semibold text-gray-800 mb-3">Видео уроков ({allEmbedUrls.length})</h3>
+                {allEmbedUrls.map((url, index) => (
+                  <div key={index}>
+                    {allEmbedUrls.length > 1 && (
+                      <h4 className="text-base font-medium text-gray-700 mb-2">Видео {index + 1}</h4>
+                    )}
+                    <div className="relative pb-[56.25%] h-0 overflow-hidden rounded-xl shadow-2xl">
+                      <iframe
+                        className="absolute top-0 left-0 w-full h-full"
+                        src={url}
+                        title={`${selectedLesson?.title || course.title} - Видео ${index + 1}`}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : selectedLesson ? (
               <div className="mb-6">
