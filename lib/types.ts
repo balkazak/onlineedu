@@ -8,7 +8,8 @@ export interface User {
 export interface Lesson {
   id: string;
   title: string;
-  youtubeLink: string;
+  youtubeLink?: string;
+  youtubeLinks?: string[];
   description?: string;
   test?: {
     questions: TestQuestion[];

@@ -30,7 +30,7 @@ export default function Footer() {
           <div>
             <div className="font-semibold mb-4">Информация</div>
             <ul className="space-y-2 text-sm">
-              <li><Link href="/offer" className="hover:underline">Публичная оферта</Link></li>
+              <li><a href="/offert.pdf" target="_blank" rel="noopener noreferrer" className="hover:underline">Публичная оферта</a></li>
               <li><Link href="#" className="hover:underline">Статьи</Link></li>
               <li><Link href="#" className="hover:underline">Контакты</Link></li>
             </ul>

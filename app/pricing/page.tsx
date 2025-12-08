@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Card, Form, Input, Button, Select, message, Layout, Row, Col, Tag } from "antd";
 import { VideoCameraOutlined, PhoneOutlined, MessageOutlined, CheckCircleOutlined, CloseCircleOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/contexts/LanguageContext";
 import Header from "@/components/Header";
 
 const { Content } = Layout;
@@ -12,11 +13,17 @@ const { Option } = Select;
 
 interface PricingPlan {
   id: string;
-  name: string;
-  duration: string;
+  nameKz: string;
+  nameRu: string;
+  durationKz: string;
+  durationRu: string;
   price: number;
   originalPrice?: number;
-  features: {
+  featuresKz: {
+    included: string[];
+    excluded: string[];
+  };
+  featuresRu: {
     included: string[];
     excluded: string[];
   };
@@ -25,46 +32,150 @@ interface PricingPlan {
 
 const pricingPlans: PricingPlan[] = [
   {
-    id: "monthly",
-    name: "1 месяц",
-    duration: "1 месяц",
-    price: 11000,
-    features: {
+    id: "bil-online-5",
+    nameKz: "БИЛ online",
+    nameRu: "БИЛ online",
+    durationKz: "5 айл",
+    durationRu: "5 месяцев",
+    price: 69000,
+    originalPrice: 125000,
+    featuresKz: {
       included: [
-        "1 месяц",
-        "24/7 доступ к видеозанятиям"
+        "БИЛ емтихасына дейінгі дайындық",
+        "Аптасына 2 рет тіркелей өфір",
+        "24/7 қолжетімділік",
+        "Кураторлық жүйе",
+        "Ай сайынғы байланау сынақтары",
+        "Қосымша материалдар",
+        "Математика, логика, қазақ тілі видео сабақтары"
       ],
-      excluded: [
-        "Тематические тесты после каждого видео",
-        "Кураторское сопровождение",
-        "Еженедельные практические занятия в прямом эфире",
-        "Домашние задания",
-        "Еженедельные контрольные тесты",
-        "Ежемесячные оценочные тесты",
-        "Пробные экзамены"
-      ]
+      excluded: []
+    },
+    featuresRu: {
+      included: [
+        "Подготовка к экзамену БИЛ",
+        "2 раза в неделю прямой эфир",
+        "Доступ 24/7",
+        "Система кураторства",
+        "Ежемесячные контрольные тесты",
+        "Дополнительные материалы",
+        "Видеоуроки по математике, логике, казахскому языку"
+      ],
+      excluded: []
     }
   },
   {
-    id: "annual",
-    name: "Оплата за 12 месяцев",
-    duration: "12 месяцев",
-    price: 33000,
-    originalPrice: 132000,
-    features: {
+    id: "hsm-online-3",
+    nameKz: "НЗМ online",
+    nameRu: "НЗМ online",
+    durationKz: "3 ай",
+    durationRu: "3 месяца",
+    price: 42000,
+    originalPrice: 75000,
+    featuresKz: {
       included: [
-        "1 год",
-        "24/7 доступ к видеозанятиям"
+        "НЗМ емтихасына дейінгі дайындық",
+        "Аптасына 2 рет тіркелей өфір",
+        "24/7 қолжетімділік",
+        "Кураторлық жүйе",
+        "Ай сайынғы байланау сынақтары",
+        "Қосымша материалдар",
+        "Математика, сандық сипаттама, жараттылсатану видео сабақтары"
       ],
-      excluded: [
-        "Тематические тесты после каждого видео",
-        "Кураторское сопровождение",
-        "Еженедельные практические занятия в прямом эфире",
-        "Домашние задания",
-        "Еженедельные контрольные тесты",
-        "Ежемесячные оценочные тесты",
-        "Пробные экзамены"
-      ]
+      excluded: []
+    },
+    featuresRu: {
+      included: [
+        "Подготовка к экзамену НЗМ",
+        "2 раза в неделю прямой эфир",
+        "Доступ 24/7",
+        "Система кураторства",
+        "Ежемесячные контрольные тесты",
+        "Дополнительные материалы",
+        "Видеоуроки по математике, цифровой грамотности, естествознанию"
+      ],
+      excluded: []
+    }
+  },
+  {
+    id: "math-bil-hsm",
+    nameKz: "Математика БИЛ-НЗМ",
+    nameRu: "Математика БИЛ-НЗМ",
+    durationKz: "Бір рет",
+    durationRu: "Один раз",
+    price: 19000,
+    originalPrice: 53000,
+    featuresKz: {
+      included: [
+        "24/7 қолжетімділік",
+        "53 тақырыптық видео",
+        "Әр тақырыпқа 15 сұрақтық тест",
+        "1 жылға қолжетімділік"
+      ],
+      excluded: []
+    },
+    featuresRu: {
+      included: [
+        "Доступ 24/7",
+        "53 видеоурока по темам",
+        "15 вопросов тестирования по каждой теме",
+        "Доступ на 1 год"
+      ],
+      excluded: []
+    }
+  },
+  {
+    id: "logic-bil",
+    nameKz: "Логика (БИЛ)",
+    nameRu: "Логика (БИЛ)",
+    durationKz: "Бір рет",
+    durationRu: "Один раз",
+    price: 14900,
+    originalPrice: 20000,
+    featuresKz: {
+      included: [
+        "24/7 қолжетімділік",
+        "20 тақырыптық видео",
+        "Әр тақырыпқа 15 сұрақтық тест",
+        "1 жылға қолжетімділік"
+      ],
+      excluded: []
+    },
+    featuresRu: {
+      included: [
+        "Доступ 24/7",
+        "20 видеоуроков по темам",
+        "15 вопросов тестирования по каждой теме",
+        "Доступ на 1 год"
+      ],
+      excluded: []
+    }
+  },
+  {
+    id: "bil-paket",
+    nameKz: "БИЛ пакет",
+    nameRu: "БИЛ пакет",
+    durationKz: "Бір рет",
+    durationRu: "Один раз",
+    price: 29900,
+    originalPrice: 76000,
+    featuresKz: {
+      included: [
+        "24/7 қолжетімділік",
+        "20 тақырыптық видео",
+        "Әр тақырыпқа 15 сұрақтық тест",
+        "1 жылға қолжетімділік"
+      ],
+      excluded: []
+    },
+    featuresRu: {
+      included: [
+        "Доступ 24/7",
+        "20 видеоуроков по темам",
+        "15 вопросов тестирования по каждой теме",
+        "Доступ на 1 год"
+      ],
+      excluded: []
     }
   }
 ];
@@ -73,6 +184,9 @@ export default function PricingPage() {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { language } = useLanguage();
+
+  const isKz = language === "kz";
 
   const onFinish = async (values: {
     phone: string;
@@ -82,7 +196,8 @@ export default function PricingPage() {
     setLoading(true);
     try {
       // Build Russian-labeled payload so Formspree email shows Russian field names
-      const planName = pricingPlans.find((p) => p.id === values.plan)?.name || values.plan;
+      const plan = pricingPlans.find((p) => p.id === values.plan);
+      const planName = plan ? (isKz ? plan.nameKz : plan.nameRu) : values.plan;
       const payload: Record<string, string> = {
         Телефон: values.phone || "",
         Тариф: planName,
@@ -135,8 +250,9 @@ export default function PricingPage() {
                 >
                   <div className="text-center mb-6">
                       <h2 className={`text-2xl font-bold mb-2 text-teal-800`}>
-                      {plan.name}
+                      {isKz ? plan.nameKz : plan.nameRu}
                     </h2>
+                    <p className="text-sm text-gray-600 mb-3">{isKz ? plan.durationKz : plan.durationRu}</p>
                     {plan.originalPrice && (
                       <div className="mb-2">
                           <span className={`text-lg line-through opacity-70 text-gray-500`}>
@@ -152,13 +268,13 @@ export default function PricingPage() {
                   </div>
 
                   <div className="space-y-3">
-                      {plan.features.included.map((feature, index) => (
+                      {(isKz ? plan.featuresKz.included : plan.featuresRu.included).map((feature: string, index: number) => (
                         <div key={index} className="flex items-start gap-2">
                           <CheckCircleOutlined className="text-lg mt-1 text-green-500" />
                           <span className="text-gray-700">{feature}</span>
                         </div>
                       ))}
-                      {plan.features.excluded.map((feature, index) => (
+                      {(isKz ? plan.featuresKz.excluded : plan.featuresRu.excluded).map((feature: string, index: number) => (
                         <div key={index} className="flex items-start gap-2 opacity-50">
                           <CloseCircleOutlined className="text-lg mt-1 text-gray-400" />
                           <span className="text-gray-500">{feature}</span>
@@ -193,11 +309,11 @@ export default function PricingPage() {
                 </Col>
 
                 <Col xs={24}>
-                  <Form.Item name="plan" label="Тариф" rules={[{ required: true, message: "Выберите тариф" }]}>
-                    <Select placeholder="Выберите тариф" className="border-teal-300" style={{ textAlign: "center" }}>
+                  <Form.Item name="plan" label={isKz ? "Тариф" : "Тариф"} rules={[{ required: true, message: isKz ? "Тарифты таңдаңыз" : "Выберите тариф" }]}>
+                    <Select placeholder={isKz ? "Тарифты таңдаңыз" : "Выберите тариф"} className="border-teal-300" style={{ textAlign: "center" }}>
                       {pricingPlans.map((plan) => (
                         <Option key={plan.id} value={plan.id}>
-                          {plan.name}
+                          {isKz ? plan.nameKz : plan.nameRu}
                         </Option>
                       ))}
                     </Select>
@@ -205,8 +321,8 @@ export default function PricingPage() {
                 </Col>
 
                 <Col xs={24}>
-                  <Form.Item name="comment" label="Комментарий (необязательно)">
-                    <TextArea rows={3} placeholder="Оставьте комментарий или вопрос..." showCount maxLength={300} style={{ textAlign: "center" }} />
+                  <Form.Item name="comment" label={isKz ? "Пікір (міндетті емес)" : "Комментарий (необязательно)"}>
+                    <TextArea rows={3} placeholder={isKz ? "Пікіріңіз немесе сұрақыңызды қалдырыңыз..." : "Оставьте комментарий или вопрос..."} showCount maxLength={300} style={{ textAlign: "center" }} />
                   </Form.Item>
                 </Col>
               </Row>

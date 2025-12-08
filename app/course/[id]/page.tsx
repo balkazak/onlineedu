@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo, useCallback, useRef } from "react";
-import { Card, Button, message, Empty, Layout, Radio, Space } from "antd";
+import { Card, Button, message, Empty, Layout, Radio, Space, Drawer } from "antd";
 import { ArrowLeftOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
 import { useRouter, useParams } from "next/navigation";
 import { useUser } from "@/contexts/UserContext";
@@ -22,6 +22,7 @@ export default function CoursePage() {
   const [testAnswers, setTestAnswers] = useState<Record<number, string>>({});
   const [testResults, setTestResults] = useState<Record<number, boolean> | null>(null);
   const [testSubmitted, setTestSubmitted] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const params = useParams();
@@ -94,7 +95,7 @@ export default function CoursePage() {
   }, []);
 
   const embedUrl = useMemo(() => 
-    selectedLesson ? getYouTubeEmbedUrl(selectedLesson.youtubeLink) : null,
+    selectedLesson?.youtubeLink ? getYouTubeEmbedUrl(selectedLesson.youtubeLink) : null,
     [selectedLesson, getYouTubeEmbedUrl]
   );
   
@@ -133,9 +134,10 @@ export default function CoursePage() {
     <Layout className="min-h-screen bg-gray-50">
       <Header />
       <Layout>
+        {/* Desktop Sider */}
         <Sider
           width={380}
-          className="bg-white shadow-xl border-r border-gray-200 overflow-y-auto overflow-x-hidden"
+          className="bg-white shadow-xl border-r border-gray-200 overflow-y-auto overflow-x-hidden hidden lg:block"
           collapsible
           collapsed={collapsed}
           onCollapse={setCollapsed}
@@ -199,14 +201,88 @@ export default function CoursePage() {
             </div>
           </div>
         </Sider>
+
+        {/* Mobile Drawer */}
+        <Drawer
+          title={course?.title}
+          placement="left"
+          onClose={() => setDrawerOpen(false)}
+          open={drawerOpen}
+          className="lg:hidden"
+          bodyStyle={{ padding: 0 }}
+        >
+          <div className="p-4 flex flex-col">
+            <div className="space-y-2">
+              {course?.lessons.map((lesson) => (
+                  <div
+                    key={lesson.id}
+                    className={`rounded-lg border transition-all duration-200 ${
+                      selectedLesson?.id === lesson.id
+                        ? "bg-teal-50 border-teal-300 shadow-md"
+                        : "bg-white border-gray-200 hover:border-teal-300 hover:shadow-sm"
+                    }`}
+                  >
+                    <div className="p-3">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <h4 className={`text-sm font-semibold flex-1 leading-tight ${
+                          selectedLesson?.id === lesson.id ? "text-teal-700" : "text-gray-900"
+                        }`}>
+                          {lesson.title}
+                        </h4>
+                        <Button
+                          type={selectedLesson?.id === lesson.id ? "primary" : "default"}
+                          size="small"
+                          className={`text-xs font-medium rounded-md ${
+                            selectedLesson?.id === lesson.id
+                              ? "bg-teal-600 border-teal-600 hover:bg-teal-700"
+                              : "bg-gray-100 border-gray-300 text-gray-700 hover:bg-gray-200"
+                          }`}
+                          style={{ minWidth: 100, height: 28, padding: "0 12px" }}
+                          onClick={() => {
+                          setSelectedLesson(lesson);
+                          setShowTest(false);
+                          setShowSolution(false);
+                          setTestAnswers({});
+                          setTestResults(null);
+                          setTestSubmitted(false);
+                          setDrawerOpen(false);
+                          // Scroll right content to top
+                          if (contentRef.current) {
+                            contentRef.current.scrollTop = 0;
+                          }
+                        }}
+                        >
+                          Открыть урок
+                        </Button>
+                      </div>
+                      {lesson.description && (
+                        <p className="text-xs text-gray-600 mt-2 leading-relaxed">
+                          {lesson.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        </Drawer>
         <Content className="p-6 overflow-y-auto" style={{ maxHeight: "calc(100vh - 64px)" }} ref={contentRef}>
-          <Button
-            icon={<ArrowLeftOutlined />}
-            onClick={() => router.push("/courses")}
-            className="mb-6 border-none shadow-md bg-teal-600 text-white hover:bg-teal-700 hover:text-white px-6 py-2 rounded-lg text-base font-medium flex items-center gap-2"
-          >
-            Назад к курсам
-          </Button>
+          <div className="flex items-center gap-3 mb-6">
+            <Button
+              icon={<ArrowLeftOutlined />}
+              onClick={() => router.push("/courses")}
+              className="border-none shadow-md bg-teal-600 text-white hover:bg-teal-700 hover:text-white px-6 py-2 rounded-lg text-base font-medium flex items-center gap-2"
+            >
+              Назад к курсам
+            </Button>
+            <Button
+              icon={<MenuFoldOutlined />}
+              onClick={() => setDrawerOpen(true)}
+              className="lg:hidden border-none shadow-md bg-teal-600 text-white hover:bg-teal-700 hover:text-white px-6 py-2 rounded-lg text-base font-medium"
+            >
+              Меню уроков
+            </Button>
+          </div>
 
           <Card className="mt-6 shadow-xl border-0 rounded-2xl">
             <div className="mb-6">
@@ -237,7 +313,7 @@ export default function CoursePage() {
                     <div className="relative pb-[56.25%] h-0 overflow-hidden rounded-xl shadow-2xl">
                       <iframe
                         className="absolute top-0 left-0 w-full h-full"
-                        src={url}
+                        src={url || ""}
                         title={`${selectedLesson?.title || course.title} - Видео ${index + 1}`}
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
@@ -423,7 +499,7 @@ export default function CoursePage() {
                                 setTestSubmitted(true);
                                 
                                 const correctCount = Object.values(results).filter(r => r).length;
-                                const totalCount = selectedLesson.test.questions.length;
+                                const totalCount = selectedLesson.test?.questions.length || 0;
                                 const percentage = Math.round((correctCount / totalCount) * 100);
                                 
                                 if (percentage === 100) {

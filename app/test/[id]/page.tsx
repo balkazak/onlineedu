@@ -247,26 +247,29 @@ export default function TestPage() {
                 <Radio.Group
                   onChange={(e) => handleAnswerChange(index, e.target.value)}
                   value={answers[index]}
-                  className="w-full flex flex-col gap-4"
+                  className="w-full flex flex-col gap-3"
                   disabled={timeLeft <= 0}
-                  optionType="button"
-                  buttonStyle="solid"
                 >
                   {question.options.map((option: any, optIndex: number) => (
-                    <Radio.Button 
-                      key={optIndex} 
-                      value={option.label} 
-                      className="block w-full text-base border border-gray-300 rounded-lg py-3 hover:bg-teal-50 font-medium transition-all mb-3"
+                    <div 
+                      key={optIndex}
+                      className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-all ${
+                        answers[index] === option.label 
+                          ? "border-teal-500 bg-teal-50" 
+                          : "border-gray-300 hover:border-teal-400 hover:bg-gray-50"
+                      }`}
+                      onClick={() => handleAnswerChange(index, option.label)}
                     >
-                      <div className="flex items-center gap-3">
-                        {option.image && (
-                          <img src={option.image} alt={`opt-${index}-${optIndex}`} className="w-20 h-20 object-contain rounded-md" loading="lazy" />
-                        )}
-                        <div className="flex-1 text-left">
-                          {option.text || option.label}
-                        </div>
-                      </div>
-                    </Radio.Button>
+                      <Radio value={option.label} />
+                      <span className="font-semibold text-base w-6 text-gray-700">
+                        {option.label})
+                      </span>
+                      {option.image ? (
+                        <img src={option.image} alt={`opt-${index}-${optIndex}`} className="w-24 h-24 object-contain rounded-md" loading="lazy" />
+                      ) : (
+                        <span className="text-base text-gray-800">{option.text}</span>
+                      )}
+                    </div>
                   ))}
                 </Radio.Group>
               </Card>

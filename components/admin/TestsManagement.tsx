@@ -143,10 +143,14 @@ export default function TestsManagement() {
       return question as TestQuestion;
     }));
 
-    const questions = (processedQuestions || []).filter((q: TestQuestion) => q.q && q.options && q.options.length >= 2 && q.answer);
+    const questions = (processedQuestions || []).filter((q: TestQuestion) => {
+      const hasQuestionContent = q.q || q.qImage; // text or image
+      const hasValidOptions = q.options && q.options.length >= 2 && q.options.some(opt => opt.text || opt.image); // at least 2 options with content
+      return hasQuestionContent && hasValidOptions && q.answer;
+    });
 
     if (questions.length === 0) {
-      message.error("Добавьте хотя бы один вопрос с минимум 2 вариантами ответа");
+      message.error("Добавьте хотя бы один вопрос с текстом или картинкой, минимум 2 вариантами ответа");
       return;
     }
 
@@ -338,9 +342,20 @@ export default function TestsManagement() {
                       {...restField}
                       name={[name, "q"]}
                       label="Вопрос"
-                      rules={[{ required: true, message: "Введите вопрос" }]}
+                      rules={[
+                        {
+                          validator: (_, value) => {
+                            const qImageFile = form.getFieldValue(['questions', name, 'qImageFile']);
+                            const hasImage = qImageFile && Array.isArray(qImageFile) && qImageFile.length > 0;
+                            if (!value && !hasImage) {
+                              return Promise.reject(new Error("Введите вопрос или загрузите картинку"));
+                            }
+                            return Promise.resolve();
+                          }
+                        }
+                      ]}
                     >
-                      <Input placeholder="Текст вопроса" />
+                      <Input placeholder="Текст вопроса (или загрузите картинку)" />
                     </Form.Item>
                     <Form.Item
                       {...restField}
@@ -399,10 +414,21 @@ export default function TestsManagement() {
                                     <Form.Item
                                       {...fld}
                                       name={[fld.name, "text"]}
-                                      rules={[{ required: true, message: "Вариант обязателен" }]}
+                                      rules={[
+                                        {
+                                          validator: (_, value) => {
+                                            const optionImageFile = form.getFieldValue(['questions', name, 'options', fld.name, 'imageFile']);
+                                            const hasImage = optionImageFile && Array.isArray(optionImageFile) && optionImageFile.length > 0;
+                                            if (!value && !hasImage) {
+                                              return Promise.reject(new Error("Введите вариант или загрузите картинку"));
+                                            }
+                                            return Promise.resolve();
+                                          }
+                                        }
+                                      ]}
                                       className="mb-1"
                                     >
-                                      <Input placeholder={`Вариант ${String.fromCharCode(97 + idx)}`} />
+                                      <Input placeholder={`Вариант ${String.fromCharCode(97 + idx)} (или загрузите картинку)`} />
                                     </Form.Item>
                                     <Form.Item
                                       {...fld}

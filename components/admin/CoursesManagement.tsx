@@ -49,10 +49,10 @@ export default function CoursesManagement() {
       ? course.lessons.map(lesson => {
           const lessonData: any = {
             ...lesson,
-            // Convert legacy youtubeLink to youtubeLinks array
-            youtubeLinks: lesson.youtubeLink 
-              ? [lesson.youtubeLink] 
-              : (lesson.youtubeLinks || [""]),
+            // Convert legacy youtubeLink to youtubeLinks array, or use existing youtubeLinks
+            youtubeLinks: lesson.youtubeLinks && lesson.youtubeLinks.length > 0
+              ? lesson.youtubeLinks
+              : (lesson.youtubeLink ? [lesson.youtubeLink] : [""]),
             test: lesson.test || { questions: [] }
           };
           
@@ -179,7 +179,16 @@ export default function CoursesManagement() {
           return question;
         }));
 
-        lesson.test = { questions: processedQuestions };
+        // Filter questions to ensure they have content (text or image) and valid options
+        const validQuestions = processedQuestions.filter((q: any) => {
+          const hasQuestionContent = q.q || q.qImage; // text or image
+          const hasValidOptions = q.options && q.options.length >= 2 && q.options.some((opt: any) => opt.text || opt.image); // at least 2 options with content
+          return hasQuestionContent && hasValidOptions && q.answer;
+        });
+
+        if (validQuestions.length > 0) {
+          lesson.test = { questions: validQuestions };
+        }
       }
 
       return lesson;

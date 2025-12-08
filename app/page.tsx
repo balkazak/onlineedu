@@ -164,6 +164,18 @@ export default function Home() {
               </div>
             </Carousel>
           </div>
+          <div className="bg-white/95 backdrop-blur-sm shadow-2xl border-0 rounded-3xl p-8 md:p-12 mb-20 overflow-hidden mt-20">
+            <div className="relative pb-[56.25%] h-0 overflow-hidden rounded-xl shadow-2xl">
+              <video
+                ref={videoRef}
+                className="absolute top-0 left-0 w-full h-full object-cover"
+                loop
+                playsInline
+              >
+                <source src="/promo.webm" type="video/webm" />
+              </video>
+            </div>
+          </div>
         </div>
         <div className="relative min-h-screen bg-gradient-to-b from-teal-500 via-teal-600 to-teal-700 overflow-hidden">
           <div className="absolute inset-0">
@@ -295,19 +307,6 @@ export default function Home() {
                     </div>
                   </Col>
                 </Row>
-              </div>
-
-              <div className="bg-white/95 backdrop-blur-sm shadow-2xl border-0 rounded-3xl p-8 md:p-12 mb-20 overflow-hidden">
-                <div className="relative pb-[56.25%] h-0 overflow-hidden rounded-xl shadow-2xl">
-                  <video
-                    ref={videoRef}
-                    className="absolute top-0 left-0 w-full h-full object-cover"
-                    loop
-                    playsInline
-                  >
-                    <source src="/promo.webm" type="video/webm" />
-                  </video>
-                </div>
               </div>
 
               <div className="bg-white/95 backdrop-blur-sm shadow-2xl border-0 rounded-3xl p-8 md:p-12">
