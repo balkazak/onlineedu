@@ -14,9 +14,9 @@
     "firebase": "^12.6.0",
     "less": "^4.4.2",
     "less-loader": "^12.3.0",
-    "react": "^18.2.0",  // or the latest stable version of React
-    "react-dom": "^18.2.0",  // same for react-dom
-    "next": "^13.0.0",  // or the latest stable version of Next.js
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "next": "^13.0.0",
     "react-player": "^3.4.0"
   },
   "devDependencies": {
