@@ -1,6 +1,5 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   reactStrictMode: false,
   swcMinify: false,
   typescript: {
@@ -16,7 +15,7 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['antd', '@ant-design/icons'],
   },
-  turbopack: {},  // Это пустая конфигурация для Turbopack
+  turbopack: {},  // This is an empty config for Turbopack
 };
 
-export default nextConfig;
+module.exports = nextConfig;
